@@ -37,7 +37,7 @@ git submodule add <repo-url> coding-rules
 ./coding-rules/install.sh
 ```
 
-The install script copies the stubs into `.cursor/rules/` and `.claude/rules/`, and creates root `AGENTS.md` / `CLAUDE.md` from the templates if the project doesn't have them. Commit all of it — the stubs are tiny and stable, and the submodule pins the exact rules version the project uses.
+The install script copies the stubs into `.cursor/rules/` and `.claude/rules/` under a `coding-rules-` filename prefix, and creates root `AGENTS.md` / `CLAUDE.md` from the templates if the project doesn't have them. It never overwrites the project's own files: the prefix prevents name collisions with existing rules, re-runs replace exactly the prefixed set, and existing `AGENTS.md` / `CLAUDE.md` are left untouched. Commit all of it — the stubs are tiny and stable, and the submodule pins the exact rules version the project uses.
 
 Cloning a project that uses this repo:
 

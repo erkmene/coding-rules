@@ -27,11 +27,20 @@ echo "Installing coding-rules stubs into $PROJECT_ROOT"
 
 mkdir -p "$PROJECT_ROOT/.cursor/rules" "$PROJECT_ROOT/.claude/rules"
 
-cp "$RULES_DIR"/stubs/cursor/*.mdc "$PROJECT_ROOT/.cursor/rules/"
-echo "  .cursor/rules/  $(ls "$RULES_DIR"/stubs/cursor | wc -l | tr -d ' ') stubs"
+# Stubs are installed under a "coding-rules-" filename prefix so they can
+# never collide with a project's own rule files. The prefix also marks
+# ownership: re-runs replace exactly the prefixed set and touch nothing else.
+rm -f "$PROJECT_ROOT/.cursor/rules/coding-rules-"*.mdc
+for stub in "$RULES_DIR"/stubs/cursor/*.mdc; do
+  cp "$stub" "$PROJECT_ROOT/.cursor/rules/coding-rules-$(basename "$stub")"
+done
+echo "  .cursor/rules/  $(ls "$RULES_DIR"/stubs/cursor | wc -l | tr -d ' ') stubs (coding-rules-*.mdc)"
 
-cp "$RULES_DIR"/stubs/claude/*.md "$PROJECT_ROOT/.claude/rules/"
-echo "  .claude/rules/  $(ls "$RULES_DIR"/stubs/claude | wc -l | tr -d ' ') stubs"
+rm -f "$PROJECT_ROOT/.claude/rules/coding-rules-"*.md
+for stub in "$RULES_DIR"/stubs/claude/*.md; do
+  cp "$stub" "$PROJECT_ROOT/.claude/rules/coding-rules-$(basename "$stub")"
+done
+echo "  .claude/rules/  $(ls "$RULES_DIR"/stubs/claude | wc -l | tr -d ' ') stubs (coding-rules-*.md)"
 
 # Root index files are created only if absent — projects customize these.
 if [[ ! -f "$PROJECT_ROOT/AGENTS.md" ]]; then
