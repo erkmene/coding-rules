@@ -1,0 +1,11 @@
+---
+description: JavaScript guidelines — canonical content in coding-rules/rules/javascript.md
+globs: **/*.js,**/*.jsx,**/*.mjs,**/*.cjs,**/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# JavaScript guidelines
+
+The canonical rule content lives in [`coding-rules/rules/javascript.md`](mdc:coding-rules/rules/javascript.md) — shared with Claude Code so the tools cannot drift.
+
+When writing or editing JavaScript or TypeScript, read and follow `coding-rules/rules/javascript.md`: functional style with pure functions, composition over inheritance, async/await with handled promises, strict equality, destructuring, ES modules, and disciplined logging.

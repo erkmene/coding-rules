@@ -1,0 +1,10 @@
+---
+description: Universal language-agnostic coding principles — always apply
+alwaysApply: true
+---
+
+# Universal principles
+
+The canonical rule content lives in [`coding-rules/rules/universal.md`](mdc:coding-rules/rules/universal.md) — a single source of truth shared with Claude Code (indexed by [`AGENTS.md`](mdc:AGENTS.md)) so the tools cannot drift.
+
+Read and follow `coding-rules/rules/universal.md` for all work in this repository: code-as-story structure, DRY and its counterweight (abstraction discipline, YAGNI), naming, small modular units, function and API design, no dead code, error handling, contextual logging, documentation, boundary validation, dates/times/money, i18n, performance, secrets hygiene, definition of done, and AI-agent working rules.

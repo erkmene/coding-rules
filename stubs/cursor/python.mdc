@@ -1,0 +1,11 @@
+---
+description: Python guidelines — canonical content in coding-rules/rules/python.md
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python guidelines
+
+The canonical rule content lives in [`coding-rules/rules/python.md`](mdc:coding-rules/rules/python.md) — shared with Claude Code so the tools cannot drift.
+
+When writing or editing Python, read and follow `coding-rules/rules/python.md`: PEP 8 via the project formatter, mandatory type hints on public functions, dataclasses for structured data, specific exceptions with chaining, context managers, pathlib, module-level loggers, and modern tooling defaults (pyproject.toml, uv, Ruff) for new projects.

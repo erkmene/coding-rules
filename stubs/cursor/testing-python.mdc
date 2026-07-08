@@ -1,0 +1,11 @@
+---
+description: Python testing conventions — canonical content in coding-rules/rules/testing-python.md
+globs: **/test_*.py,**/*_test.py,**/tests/**/*.py,**/conftest.py
+alwaysApply: false
+---
+
+# Python testing conventions
+
+The canonical rule content lives in [`coding-rules/rules/testing-python.md`](mdc:coding-rules/rules/testing-python.md) — shared with Claude Code so the tools cannot drift.
+
+When writing or editing Python tests, read and follow `coding-rules/rules/testing-python.md`: pytest with plain assert functions, behavior-driven test names, fixtures and parametrize, built-in fixtures (tmp_path, monkeypatch, caplog), boundary-level mocking, and strict test isolation.

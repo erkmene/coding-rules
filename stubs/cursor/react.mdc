@@ -1,0 +1,11 @@
+---
+description: React guidelines for UI code — canonical content in coding-rules/rules/react.md
+globs: **/*.jsx,**/*.tsx
+alwaysApply: false
+---
+
+# React guidelines
+
+The canonical rule content lives in [`coding-rules/rules/react.md`](mdc:coding-rules/rules/react.md) — shared with Claude Code so the tools cannot drift. It applies only to React UI code; never apply React patterns to non-React code.
+
+When writing or editing React components and hooks, read and follow `coding-rules/rules/react.md`: Rules of React (purity, Rules of Hooks), render-only components with mappers and custom hooks for logic, state placement (local UI state vs domain stores vs server state), server-first patterns where the framework supports RSC, performance patterns, and accessibility essentials.

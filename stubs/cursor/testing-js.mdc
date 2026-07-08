@@ -1,0 +1,11 @@
+---
+description: JS/TS testing conventions — canonical content in coding-rules/rules/testing-js.md
+globs: **/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx,**/*.spec.js,**/*.spec.jsx,**/*.spec.ts,**/*.spec.tsx,**/__tests__/**
+alwaysApply: false
+---
+
+# JavaScript / TypeScript testing conventions
+
+The canonical rule content lives in [`coding-rules/rules/testing-js.md`](mdc:coding-rules/rules/testing-js.md) — shared with Claude Code so the tools cannot drift.
+
+When writing or editing JS/TS tests, read and follow `coding-rules/rules/testing-js.md`: co-located test files, behavior-driven test names, Testing Library query priority, network-layer mocking, state isolation, the snapshot policy, and the flaky-test playbook.

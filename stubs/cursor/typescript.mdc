@@ -1,0 +1,11 @@
+---
+description: TypeScript guidelines — canonical content in coding-rules/rules/typescript.md
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript guidelines
+
+The canonical rule content lives in [`coding-rules/rules/typescript.md`](mdc:coding-rules/rules/typescript.md) — shared with Claude Code so the tools cannot drift. It applies on top of [`coding-rules/rules/javascript.md`](mdc:coding-rules/rules/javascript.md).
+
+When writing or editing TypeScript, read and follow `coding-rules/rules/typescript.md`: strict compiler options, no `any`, narrowing over assertions, discriminated unions, single source of truth for domain types, explicit types at module boundaries, and `import type` for type-only imports.
