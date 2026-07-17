@@ -1,0 +1,10 @@
+---
+description: HTTP (REST) API design rules — contracts, errors, pagination, idempotency; self-scoped to API work
+alwaysApply: true
+---
+
+# API design guidelines
+
+The canonical rule content lives in [`coding-rules/rules/api-design.md`](mdc:coding-rules/rules/api-design.md) — a single source of truth shared with Claude Code so the tools cannot drift.
+
+These rules apply only when designing or implementing HTTP (REST) APIs; skip them for code with no API surface. When they do apply, read and follow `coding-rules/rules/api-design.md`: published contracts evolve additively, URL-path versioning only as a last resort and only by human decision, one RFC 9457-style error envelope with stable machine-mappable codes, pagination from day one, idempotency for consequential POSTs, and schema-driven boundary validation with OpenAPI generated from the same source of truth.

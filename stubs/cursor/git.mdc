@@ -1,0 +1,10 @@
+---
+description: Git rules — atomic commits, message discipline, branch naming, PR hygiene — always apply
+alwaysApply: true
+---
+
+# Git guidelines
+
+The canonical rule content lives in [`coding-rules/rules/git.md`](mdc:coding-rules/rules/git.md) — a single source of truth shared with Claude Code so the tools cannot drift.
+
+For all version-control activity (commits, branches, pull requests), read and follow `coding-rules/rules/git.md`: atomic commits that pass at every step, imperative subject lines with the why in the body, mechanical changes separated from logic changes, `feature/*` / `fix/*` / `chore/*` branches, one concern per PR, and no rewriting of published history.

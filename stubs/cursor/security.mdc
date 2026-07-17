@@ -1,0 +1,10 @@
+---
+description: Security rules — log redaction, object-level authorization, fail-closed, least privilege — always apply
+alwaysApply: true
+---
+
+# Security guidelines
+
+The canonical rule content lives in [`coding-rules/rules/security.md`](mdc:coding-rules/rules/security.md) — a single source of truth shared with Claude Code so the tools cannot drift. It extends the universal security items (injection, exec sinks, randomness, secrets); it does not replace them.
+
+Read and follow `coding-rules/rules/security.md` for all work in this repository: never log secrets or personal data, authorization checked server-side against the specific resource instance at every entry point, fail closed on check errors, least-privilege credentials and scopes, adaptive password hashing, and automated dependency audits.

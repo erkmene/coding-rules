@@ -1,0 +1,10 @@
+---
+description: Data & persistence rules — schema compatibility, expand/contract migrations, transactions, query discipline; self-scoped to projects with a database
+alwaysApply: true
+---
+
+# Data & persistence guidelines
+
+The canonical rule content lives in [`coding-rules/rules/data.md`](mdc:coding-rules/rules/data.md) — a single source of truth shared with Claude Code so the tools cannot drift.
+
+These rules apply only to projects with a database or other durable store; skip them otherwise. When they do apply, read and follow `coding-rules/rules/data.md`: the schema is a published contract, expand → migrate → contract for every breaking schema change, reversible and immutable migrations with destructive operations isolated for review, transactions around multi-write invariants (kept short, no network calls inside), UTC timestamps on every table, and batched, indexed, measured queries.

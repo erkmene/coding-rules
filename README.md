@@ -22,6 +22,11 @@ Rule content lives **only** in `rules/`. Stubs carry activation metadata (Cursor
 | File | Scope |
 |------|-------|
 | `rules/universal.md` | Every file, every language |
+| `rules/architecture.md` | Module boundaries, dependency direction, configuration — every project |
+| `rules/security.md` | Every file; extends the universal security items |
+| `rules/git.md` | Commits, branches, pull requests — every project |
+| `rules/api-design.md` | HTTP (REST) APIs — self-scoped, skip if no API surface |
+| `rules/data.md` | Schema, migrations, queries — self-scoped, skip if no database |
 | `rules/javascript.md` | JS (and TS, together with the TypeScript rules) |
 | `rules/typescript.md` | TS, on top of the JavaScript rules |
 | `rules/python.md` | Python |

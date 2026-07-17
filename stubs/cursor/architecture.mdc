@@ -1,0 +1,10 @@
+---
+description: Architecture rules — dependency direction, feature boundaries, configuration — always apply
+alwaysApply: true
+---
+
+# Architecture guidelines
+
+The canonical rule content lives in [`coding-rules/rules/architecture.md`](mdc:coding-rules/rules/architecture.md) — a single source of truth shared with Claude Code so the tools cannot drift.
+
+Read and follow `coding-rules/rules/architecture.md` for all structural work in this repository: dependency direction (features → shared → core, no cycles), features as boxes with one door (public surface via a single entry file, no reach-ins), functional core / imperative shell, external systems behind owned adapters, configuration read once and passed down, and boundary-justified (never speculative) module splits.

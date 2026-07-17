@@ -28,6 +28,15 @@ Apply to all Python code (`.py`). Universal principles apply first. Target moder
 - Prefer EAFP ("easier to ask forgiveness than permission") where it reads naturally: `try`/`except KeyError` over pre-checking, when the failure case is genuinely exceptional.
 - Custom exception classes derive from a project base exception when callers need to branch on error kinds.
 
+## Asynchrony
+
+Applies when the project uses asyncio or an async framework built on it.
+
+- Never make blocking calls inside `async def`: `time.sleep`, synchronous HTTP clients, synchronous DB drivers, heavy CPU work. Use the async equivalent (`asyncio.sleep`, an async client/driver) or push the blocking work to a thread (`asyncio.to_thread`).
+- Prefer structured concurrency: `asyncio.TaskGroup` (3.11+) over bare `asyncio.create_task` or hand-rolled `gather` bookkeeping — tasks cannot outlive their scope, and one failure cancels the siblings and propagates.
+- Never fire-and-forget a bare `create_task`: the event loop holds only weak references, so an unreferenced task can be garbage-collected mid-flight and its exception silently lost. Hold a reference and consume its result, or use a `TaskGroup`.
+- Every await on external I/O gets a timeout (`asyncio.timeout(...)`); a hung dependency must not hang the service.
+
 ## Resources and I/O
 
 - Use context managers (`with`) for anything that must be released: files, locks, connections, sessions. Never rely on garbage collection for cleanup.

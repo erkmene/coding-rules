@@ -11,6 +11,11 @@ Code is a story told step by step toward a definite purpose: the entry file is t
 | Rule file | Applies to |
 |-----------|------------|
 | [`coding-rules/rules/universal.md`](coding-rules/rules/universal.md) | Every file, every language — always in effect |
+| [`coding-rules/rules/architecture.md`](coding-rules/rules/architecture.md) | Every file — module boundaries, dependency direction, configuration — always in effect |
+| [`coding-rules/rules/security.md`](coding-rules/rules/security.md) | Every file — always in effect; extends the universal security items |
+| [`coding-rules/rules/git.md`](coding-rules/rules/git.md) | Version-control activity: commits, branches, pull requests |
+| [`coding-rules/rules/api-design.md`](coding-rules/rules/api-design.md) | HTTP (REST) API design and implementation — self-scoped, skip if no API surface |
+| [`coding-rules/rules/data.md`](coding-rules/rules/data.md) | Schema, migrations, and queries — self-scoped, skip if no database |
 | [`coding-rules/rules/javascript.md`](coding-rules/rules/javascript.md) | `**/*.{js,jsx,mjs,cjs}` and, together with the TypeScript rules, `**/*.{ts,tsx}` |
 | [`coding-rules/rules/typescript.md`](coding-rules/rules/typescript.md) | `**/*.{ts,tsx}` (on top of the JavaScript rules) |
 | [`coding-rules/rules/python.md`](coding-rules/rules/python.md) | `**/*.py` |
@@ -23,5 +28,7 @@ Precedence: the more specific rule wins. Universal < language < framework (React
 ## Scope notes
 
 - The React rules apply only where React is actually in use; never apply React patterns to non-React code.
+- The API design and data rules are self-scoped: they are always loaded but apply only when the project has an HTTP API surface or a durable store, respectively.
+- The git rules govern workflow (commits, branches, PRs), not file content.
 - Language rules do not assume a framework. Framework-scoped guidance (currently React) lives in its own file.
 - Tooling recommendations inside the rules (uv, Ruff, typescript-eslint, ...) are defaults for new projects; an existing project's tool choices take precedence.

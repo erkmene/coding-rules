@@ -83,6 +83,7 @@ The story should be told not only in the code but in the logs, whether emitted t
 - Each log line reflects when something happened, which part of the story it belongs to, and what was done.
 - Namespace log output by code area so different parts of the story are distinguishable (child loggers, module-level loggers, or debug namespaces, depending on the stack).
 - Logs may carry data, but always with context — never a bare value with no explanation.
+- Never log secrets, tokens, passwords, session identifiers, or personal data. When a sensitive value is needed for correlation, log a stable hash or last-four fragment instead.
 - Use levels appropriately: errors for failures needing attention, warnings for recoverable anomalies, info for the main story beats, debug for the fine detail.
 - Keep logging clean; no leftover ad-hoc print/log statements from debugging sessions.
 

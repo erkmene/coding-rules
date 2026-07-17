@@ -36,6 +36,10 @@ def test_load_profile(): ...   # no condition, no outcome
 - The standard library or third-party packages.
 - Trivial passthroughs and generated code.
 
+## Choosing the test level
+
+Default to the lowest level that can catch the bug: unit tests for pure logic, integration tests for wiring (route + service + a real test database or faked boundary), end-to-end tests only for the few critical user journeys. The higher the level, the fewer the tests — each E2E case must earn its runtime and maintenance cost. Do not re-prove at a higher level what a lower level already covers.
+
 ## Fixtures and parametrization
 
 - Use fixtures for shared setup instead of module-level state or copy-pasted arrangement blocks; keep fixtures small and composable.

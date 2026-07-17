@@ -40,6 +40,10 @@ it('should render', ...);   // no condition, no outcome
 - CSS and visual appearance (that belongs to visual regression tooling, not unit tests).
 - Trivial getters and one-line passthroughs.
 
+## Choosing the test level
+
+Default to the lowest level that can catch the bug: unit tests for logic and pure transforms, integration tests for wiring (component + hook + mocked network together), end-to-end tests only for the few critical user journeys. The higher the level, the fewer the tests — each E2E case must earn its runtime and maintenance cost. Do not re-prove at a higher level what a lower level already covers.
+
 ## UI queries (Testing Library)
 
 Use the highest-priority query that works, most to least preferred:
