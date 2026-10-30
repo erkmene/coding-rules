@@ -8,7 +8,7 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
-## Unreleased
+## 1.0.0 (2026-10-30)
 
 **Action: none.** This is the first release; install it by following `INSTALL.md`.
 
