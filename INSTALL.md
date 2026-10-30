@@ -4,7 +4,7 @@ These instructions are for a coding agent. A person starts an install, update or
 
 > Install the coding rules from https://github.com/erkmene/coding-rules. Follow its INSTALL.md.
 
-Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Update](#update), [Uninstall](#uninstall) or [Migrating from the submodule layout](#migrating-from-the-submodule-layout).
+Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Update](#update), or [Uninstall](#uninstall).
 
 ## Terms
 
@@ -107,7 +107,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
 2. **Get the source.**
    - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
-   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop. If it is a git submodule, follow [Migrating from the submodule layout](#migrating-from-the-submodule-layout) first. Otherwise, ask the user.
+   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.**
@@ -151,26 +151,3 @@ If the instructions file does not exist, create it with only the block. If it al
 2. Remove the managed block from each instructions file.
 3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: ask whether to delete the clone.
 4. Report what was removed. In project mode, remind the user to commit the changes.
-
-## Migrating from the submodule layout
-
-Projects set up with the old `install.sh` have:
-- a `coding-rules` git submodule;
-- `.cursor/rules/coding-rules-*.mdc` and `.claude/rules/coding-rules-*.md` stubs;
-- possibly a root `AGENTS.md` and `CLAUDE.md` created from the old templates.
-
-To migrate:
-1. Delete the `coding-rules-*` stub files in `.cursor/rules/` and `.claude/rules/`.
-2. Check the submodule for work that would be lost, because the old layout has no manifest to protect it:
-   - uncommitted or untracked changes: `git -C coding-rules status --porcelain`;
-   - commits not on any remote branch: `git -C coding-rules log --branches --not --remotes --oneline`.
-   
-   If either shows anything, list it and ask the user how to preserve it (for example by pushing it, or by saving a patch) before going on.
-3. Remove the submodule:
-   - `git submodule deinit -f coding-rules`
-   - `git rm -f coding-rules`
-   - delete `.git/modules/coding-rules`
-4. Compare the root `AGENTS.md` and `CLAUDE.md` with `templates/AGENTS.md` and `templates/CLAUDE.md` at commit `4b35bfb` of the source.
-   - Identical: ask the user whether to delete them.
-   - Edited: leave them, and point out to the user the parts that describe the old layout.
-5. Do an Install.

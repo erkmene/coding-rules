@@ -44,8 +44,6 @@ The agent:
 
 To remove the rules, ask the agent to uninstall them; it removes exactly what the manifest lists.
 
-Projects set up with the old submodule and `install.sh` layout: ask the agent to install, and it will follow the migration section of `INSTALL.md`.
-
 ## The rules
 
 | File | Covers | Loads |
