@@ -39,7 +39,7 @@ This table is the only place where rule scope is defined.
 | `rules/git.md` | activity | committing, writing commit messages, creating branches, opening or updating pull requests |
 | `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers,api}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
 | `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{models,repositories,db}/**` |
-| `rules/i18n.md` | opt-in + paths | only if the user opts in; then files matching `**/{locales,i18n,messages}/**` and any file with user-facing text |
+| `rules/i18n.md` | opt-in, activity + paths | only if the user opts in; then when writing or changing user-facing text or translations, and for files matching `**/{locales,i18n,messages}/**` |
 | `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}` |
 | `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}` |
 | `rules/python.md` | paths | `**/*.py` |
@@ -55,8 +55,8 @@ How to wire each class:
 - **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file. Otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task."
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
-- **activity + paths**: wire both ways.
-- **opt-in**: wire this rule only if the user said yes during install.
+- **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
+- **opt-in**: wire this rule only if the user said yes during install, then wire it by its other classes.
 - **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and the rule files whose paths match the changed files, and report findings without editing. In every case, add a review line to the managed block (see below).
 
 Write references as paths your tool resolves:
@@ -91,6 +91,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `installedAt`: the date, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
+- `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]`. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
   - wiring files;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
@@ -102,7 +103,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Mode.** Personal: one clone serves all their projects on this machine, it is wired into their tools' user-level configuration, and updating it updates every project at once. Project: a copy is committed into this project, so it works for everyone who clones the project and in cloud or CI sessions, and each project is updated on its own. Recommend personal for someone working alone on one machine, and project for shared repositories or cloud sessions.
    - **Tools.** Which agent tools to wire. List the ones you detected from configuration folders in the project and in the user's home directory, plus yourself.
    - **i18n.** Whether the project translates, or will translate, its user-facing text.
-   - **Version.** The latest release tag (the default) or `main`.
+   - **Version.** The latest release tag (the default) or `main`. If the source has no release tags yet, say so and offer `main`.
    - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
 2. **Get the source.**
    - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
@@ -135,7 +136,7 @@ If the instructions file does not exist, create it with only the block. If it al
 6. Reconcile the wiring with the table in the target version's `INSTALL.md`:
    - create wiring that is missing;
    - replace wiring that changed (hard rule 5 applies);
-   - delete manifest-listed wiring for rules that no longer exist.
+   - delete manifest-listed wiring for rules that no longer exist, and any directory in `directories` that this leaves empty.
 7. Rewrite the managed block and the manifest, then verify as in Install step 6.
 8. Report:
    - the old and new versions;
@@ -146,7 +147,7 @@ If the instructions file does not exist, create it with only the block. If it al
 
 ## Uninstall
 
-1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies).
+1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
 3. Project mode: delete `coding-rules/`. Personal mode: ask whether to delete the clone.
 4. Report what was removed. In project mode, remind the user to commit the changes.
