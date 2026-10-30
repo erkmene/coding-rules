@@ -92,7 +92,7 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
 - **HTTP APIs:** `oasdiff breaking` against the published OpenAPI contract; Spectral for naming and casing.
 - **Tests:**
   - run them in random order (`pytest-randomly`, Vitest `sequence.shuffle`, Jest `--randomize`);
-  - reset mocks between tests in runner config: `clearMocks` or `mockReset` for standalone mocks (`jest.fn()`, `vi.fn()`), plus `restoreMocks` for spies and replaced properties;
+  - reset mocks between tests in runner config: `clearMocks` for call history, plus `resetMocks` (Jest) or `mockReset` (Vitest) for standalone mock implementations, plus `restoreMocks` for spies and replaced properties;
   - reset network handlers after each test (MSW: `server.resetHandlers()` in `afterEach`);
   - enforce coverage thresholds in runner config.
 

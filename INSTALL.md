@@ -60,7 +60,7 @@ How to wire each class:
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
 - **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
 - **opt-in**: wire this rule only if the user said yes during install, then wire it by its other classes.
-- **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and the rule files whose paths match the changed files, and report findings without editing. In every case, add a review line to the managed block (see below).
+- **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and every rule that applies to the change: the **always** rules, rules whose globs match a changed file, and rules whose activity the change involves (opt-in rules only if installed). Report findings without editing. In every case, add a review line to the managed block (see below).
 
 Write references as paths your tool resolves:
 - project mode: paths relative to the project root, e.g. `coding-rules/rules/git.md`;
@@ -138,10 +138,10 @@ If the instructions file does not exist, create it with only the block. If it al
    - Project: clone the source into a temporary folder outside the project, with enough history to include the manifest's `commit` (a full clone is simplest).
    
    This checkout is the source repository for steps 3 to 5. Run every git command in those steps there, never in the project.
-3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on `main`. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
+3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on the fetched remote branch (`origin/main`), not a local `main` branch, which a fetch does not move. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
 4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
 5. Get the target version.
-   - Personal: check out the target in the clone.
+   - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
 6. Carry out every **manual** action. Ask when an action needs a decision.
 7. Reconcile the wiring with the table in the target version's `INSTALL.md`:
@@ -162,5 +162,5 @@ If the instructions file does not exist, create it with only the block. If it al
 
 1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
-3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: ask whether to delete the clone.
+3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
 4. Report what was removed. In project mode, remind the user to commit the changes.
