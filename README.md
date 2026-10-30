@@ -1,75 +1,133 @@
 # coding-rules
 
-Canonical, tool-agnostic coding rules for AI-assisted development (Cursor, Claude Code, and anything that reads `AGENTS.md`), designed to be shared across projects as a git submodule with zero duplicated rule content.
+Coding rules for AI coding agents, written once as plain, tool-agnostic Markdown. Your agent installs them by following [`INSTALL.md`](INSTALL.md); this repository contains no tool-specific files.
 
 ## Layout
 
 ```
-rules/             # THE rules — plain, tool-agnostic markdown (single source of truth)
-stubs/
-  cursor/*.mdc     # activation stubs for Cursor  (copied into a project's .cursor/rules/)
-  claude/*.md      # activation stubs for Claude Code (copied into .claude/rules/)
-templates/
-  AGENTS.md        # root index for consuming projects (also read natively by Cursor)
-  CLAUDE.md        # one-line @AGENTS.md import shim for Claude Code
-install.sh         # copies stubs + templates into a consuming project
+rules/              the rules: plain Markdown, no frontmatter, no tool syntax
+checklists/
+  review.md         the definition of done, checked before work is handed off
+docs/
+  tooling.md        linters, type checkers, CI and hooks that enforce the checkable rules
+INSTALL.md          instructions for the installing agent: scope table, install, update, uninstall
+CHANGELOG.md        releases, each with the action an update needs
 ```
 
-Rule content lives **only** in `rules/`. Stubs carry activation metadata (Cursor `globs`, Claude `paths`) and a pointer/import — never content. Both tools therefore read the same words and cannot drift.
+## Installing
 
-## Rules
+Ask your coding agent:
 
-| File | Scope |
-|------|-------|
-| `rules/universal.md` | Every file, every language |
-| `rules/architecture.md` | Module boundaries, dependency direction, configuration — every project |
-| `rules/security.md` | Every file; extends the universal security items |
-| `rules/git.md` | Commits, branches, pull requests — every project |
-| `rules/api-design.md` | HTTP (REST) APIs — self-scoped, skip if no API surface |
-| `rules/data.md` | Schema, migrations, queries — self-scoped, skip if no database |
-| `rules/javascript.md` | JS (and TS, together with the TypeScript rules) |
-| `rules/typescript.md` | TS, on top of the JavaScript rules |
-| `rules/python.md` | Python |
-| `rules/react.md` | React UI code only |
-| `rules/testing-js.md` | JS/TS tests |
-| `rules/testing-python.md` | Python tests |
+> Install the coding rules from https://github.com/erkmene/coding-rules. Follow its INSTALL.md.
 
-## Using in a project
+The agent asks you a few questions before it changes anything:
 
-```bash
-cd your-project
-git submodule add <repo-url> coding-rules
-./coding-rules/install.sh
-```
+- **Mode:**
+  - **Personal:** one clone (default `~/coding-rules`), wired into your agent tools' user-level configuration. It serves all your projects on that machine, and updating the clone updates all of them. It does not reach teammates, CI or cloud sessions.
+  - **Project:** a copy in `coding-rules/` inside the project, committed with it, so the rules work for everyone who clones the project, including cloud sessions. Each project is updated separately.
+- **Tools:** which agent tools to wire.
+- **i18n:** whether the project translates its user-facing text, which enables the i18n rules.
+- **Version:** the latest release or `main`.
 
-The install script copies the stubs into `.cursor/rules/` and `.claude/rules/` under a `coding-rules-` filename prefix, and creates root `AGENTS.md` / `CLAUDE.md` from the templates if the project doesn't have them. It never overwrites the project's own files: the prefix prevents name collisions with existing rules, re-runs replace exactly the prefixed set, and existing `AGENTS.md` / `CLAUDE.md` are left untouched. Commit all of it — the stubs are tiny and stable, and the submodule pins the exact rules version the project uses.
+The agent wires each rule with its own tool's native mechanism: always-on rules, path-scoped rules, on-demand skills, and a reviewer subagent where the tool has one. Where a mechanism is missing, it falls back to instructions in a marked block of the tool's instructions file (such as `AGENTS.md`). Wiring files only reference the rule files and never contain rule text, so they cannot drift from this repository. The agent records what it installed in `manifest.json` in the rules folder.
 
-Cloning a project that uses this repo:
+## Updating and removing
 
-```bash
-git clone --recurse-submodules <project-url>
-# or, after a plain clone:
-git submodule update --init
-```
+> Update the coding rules. Follow coding-rules/INSTALL.md.
 
-## Updating the rules in a project
+The agent:
+1. reads the manifest;
+2. reads every changelog entry since your installed version;
+3. fetches the new version and does any manual steps the changelog lists;
+4. re-wires whatever changed, asking before it overwrites anything you edited;
+5. tells you what changed in how it should work.
 
-```bash
-git submodule update --remote coding-rules
-./coding-rules/install.sh   # only needed if the stub set changed
-git add coding-rules && git commit -m "Update coding rules"
-```
+To remove the rules, ask the agent to uninstall them; it removes exactly what the manifest lists.
 
-## Changing or adding rules
+Projects set up with the old submodule and `install.sh` layout: ask the agent to install, and it will follow the migration section of `INSTALL.md`.
 
-1. Edit or add the canonical file in `rules/` — tool-agnostic markdown, no frontmatter, no Cursor/Claude syntax.
-2. For a new rule: add a matching stub in `stubs/cursor/` (`description` + `globs` frontmatter, pointer body) and `stubs/claude/` (`paths` frontmatter + `@../../coding-rules/rules/<name>.md` import), and add a row to `templates/AGENTS.md`.
-3. Commit and push; consuming projects pick it up with `git submodule update --remote`.
+## The rules
 
-Never put rule content in a stub.
+| File | Covers | Loads |
+|------|--------|-------|
+| `rules/universal.md` | Code as a story, abstraction discipline, naming, function design, errors, logging, docs, scope of work | always |
+| `rules/architecture.md` | Dependency direction, feature boundaries, functional core, adapters, configuration | always |
+| `rules/security.md` | Sensitive data, object-level authorization, fail closed, least privilege | always |
+| `rules/git.md` | Commits, branches, pull requests | when doing version-control work |
+| `rules/api-design.md` | HTTP APIs: compatibility, versioning, errors, pagination, idempotency | for API work or API files |
+| `rules/data.md` | Schema compatibility, migrations, transactions, queries | for schema and query work or data files |
+| `rules/i18n.md` | Translated user-facing text | opt-in |
+| `rules/javascript.md` | JavaScript (and TypeScript) | JS/TS files |
+| `rules/typescript.md` | TypeScript, on top of JavaScript | TS files |
+| `rules/python.md` | Python | Python files |
+| `rules/new-project-python.md` | Python packaging and tooling choices | when setting up a Python project |
+| `rules/react.md` | React components and hooks | React files |
+| `rules/testing.md` | Testing in any language | test files |
+| `rules/testing-js.md` | JS/TS tests | JS/TS test files |
+| `rules/testing-python.md` | Python tests | Python test files |
+| `checklists/review.md` | Definition of done | before handing work off |
 
-## Assumptions
+The exact paths and activity descriptions live only in the scope table in `INSTALL.md`.
 
-- The repo is mounted at `coding-rules/` in the consuming project's root; stub references are written against that path.
-- Claude Code loads `CLAUDE.md` → `@AGENTS.md` at launch and the `.claude/rules/` stubs when files matching their `paths` are touched; each stub `@`-imports its canonical file.
-- Cursor reads `AGENTS.md` natively and activates `.cursor/rules/*.mdc` by `globs` (the `universal` stub is `alwaysApply`).
+Precedence: the project's own established conventions win over these rules. Among the rules, the more specific one wins: universal, then language, then framework, then testing.
+
+## Models
+
+The rules were written for, and checked against, current frontier coding agents from the **Claude** (Anthropic) and **GPT** (OpenAI) families. They assume an agent that:
+- already follows mainstream good practice without being told;
+- reads files it is pointed to;
+- follows multi-step written procedures such as `INSTALL.md`.
+
+With smaller or older models, the rules listed below may need to be added back as project rules.
+
+## Deliberately omitted
+
+To keep every line in an agent's context worth its cost, two kinds of rules were removed in October 2026.
+
+**Things current Claude and GPT models already do by default**, including:
+- naming functions as verbs, values as nouns and booleans as predicates; no Hungarian notation;
+- guard clauses and early returns;
+- failing fast on programmer errors and handling expected runtime failures;
+- choosing log levels;
+- keeping comments current;
+- storing timestamps in UTC and not doing arithmetic on local wall-clock time;
+- not storing money as binary floating point;
+- locale-aware formatting;
+- performance basics: measure first, avoid N+1 queries, pick the right data structure;
+- parameterized queries and safe path handling; no user data in `eval` or shell strings; secure randomness for security;
+- keeping secrets out of source and taking configuration from the environment;
+- adaptive password hashing;
+- not trusting client-supplied identity;
+- HTTP method and status-code semantics; plural resource names;
+- not leaking internals in error responses;
+- wrapping multi-write operations in a transaction;
+- imperative commit subjects;
+- rotating leaked secrets;
+- the Rules of React;
+- standard pytest and Testing Library practice.
+
+**Things a tool can enforce**, including:
+- formatting and style;
+- `===`, `const`, template literals and destructuring;
+- floating promises;
+- `any` and non-null assertions;
+- `import type`;
+- unused and commented-out code;
+- `console.log` and `print`;
+- empty `catch` blocks;
+- size and complexity limits;
+- most Python idioms;
+- accessibility basics;
+- lockfiles and dependency audits;
+- force-push protection;
+- commit message format;
+- immutable migrations.
+
+[`docs/tooling.md`](docs/tooling.md) lists the tool and setting for each one.
+
+## Changing the rules
+
+1. Edit or add the file in `rules/` (or `checklists/`): plain Markdown, no frontmatter, no tool-specific syntax.
+2. For a new rule or a scope change, update the scope table in `INSTALL.md`; nowhere else defines scope.
+3. Add an entry under `Unreleased` in `CHANGELOG.md`, with its **Action**.
+4. To release, rename `Unreleased` to the version, then tag and publish `vX.Y.Z`.
