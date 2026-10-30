@@ -6,7 +6,7 @@ Language-agnostic rules for how modules, features, and layers relate to each oth
 
 - Dependencies point from volatile to stable: feature code depends on shared code, shared code depends on core/domain code — never the reverse.
 - Domain logic never imports from delivery mechanisms (HTTP handlers, UI components, CLI parsing) or from infrastructure (database clients, queue consumers). Those outer layers depend on the domain and adapt it to the outside world.
-- Shared/common modules never import from feature modules. When a shared module needs something that lives in a feature, move that something up to the shared layer (the universal DRY "move it up" rule).
+- Shared/common modules never import from feature modules. When a shared module needs something that lives in a feature, move that something up to the shared layer.
 - No circular imports, at any level — between files, between features, between packages. A cycle means a boundary is drawn wrong; redraw the boundary (extract the shared piece, invert the dependency) rather than suppressing the cycle or hiding it behind a lazy import.
 
 ## Features are boxes with one door
@@ -21,7 +21,7 @@ Language-agnostic rules for how modules, features, and layers relate to each oth
 - Push side effects (network, filesystem, database, clock, randomness) to the edges, and pass their results into the pure core. A function that both decides and performs is harder to test than the two functions it should be.
 - Inject sources of nondeterminism (current time, random values, environment) rather than reading them deep inside logic, so tests control them without patching.
 
-## External systems behind ports
+## External systems behind adapters
 
 - Access each third-party service or SDK through one thin adapter module the project owns; feature code talks to the adapter, never to the vendor client directly.
 - The adapter gives one place to mock in tests, one place to absorb vendor changes, and one place to swap the provider. Vendor types stay inside it; the rest of the codebase sees the project's own types.
@@ -29,8 +29,7 @@ Language-agnostic rules for how modules, features, and layers relate to each oth
 ## Configuration
 
 - Configuration is read once, validated at the entry point, and passed down explicitly (or exposed through a single typed config module). No `process.env` / `os.environ` reads scattered through the codebase.
-- This keeps the full configuration surface visible and typed in one place, makes code testable without environment patching, and prevents arbitrary configuration from creeping in.
 
 ## When to split — and when not to
 
-- Extracting a module, package, or service is justified by a boundary — different consumers, different rates of change, different deployment needs — not by line count alone (size caps are handled by the universal rules).
+- Extracting a module, package, or service is justified by a boundary — different consumers, different rates of change, different deployment needs — not by line count alone.

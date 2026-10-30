@@ -9,7 +9,6 @@ Apply to version-control activity — commits, branches, pull requests — in ev
 
 ## Commit messages
 
-- Subject line in the imperative mood, capitalized, no trailing period, aiming for ~50 characters and never past 72. The test: the subject completes the sentence "If applied, this commit will …".
 - When the diff cannot explain *why*, add a body after a blank line that does. The what is visible in the diff; the why is not.
 - Conventional Commits prefixes (`feat:`, `fix:`) are not required; if the project already uses them, follow suit.
 
@@ -23,8 +22,3 @@ Apply to version-control activity — commits, branches, pull requests — in ev
 - One concern per PR. A title that joins different kinds of change ("add X and reformat Y") is two PRs; listing several items of the same kind ("add A, B, and C") is still one.
 - Large mechanical changes (renames, reformatting, generated code) go in their own PR so review attention lands on the real change.
 - The description states the intent and how the change was verified — reviewers review the claim, not just the diff.
-
-## History
-
-- Never force-push a shared branch or rewrite published history.
-- A secret that reaches a commit is compromised: rotate it immediately. Deleting the commit does not remove it from history, reflogs, or existing clones (security rules).

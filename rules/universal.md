@@ -7,7 +7,7 @@ Language-agnostic rules that apply to every file in every project. Language-spec
 Code is a step-by-step list of operations that ultimately serve a definite purpose, and it should read like a story of achieving that purpose.
 
 - Each file should define what is necessary for its step of the story and read as both a chapter in the larger story and a story in itself.
-- The story never takes detours to explain details inline. Details are extracted into smaller, modular parts and referenced — code is a hyperlinked story. Think of Little Red Riding Hood: the story covers the journey and the goal, not the fabric of the girl's clothes or the weave of the basket. Anyone curious about the basket should be able to read the basket's own story separately.
+- The story never takes detours to explain details inline. Details are extracted into smaller, modular parts and referenced — code is a hyperlinked story. Think of Little Red Riding Hood: the story covers the journey and the goal, not the weave of the basket. Anyone curious about the basket should be able to read the basket's own story separately.
 - The entry file of a project is the table of contents: it executes the main steps needed to achieve the goal (or, for daemon-like projects, the initialization and setup) and delegates everything else. It never tells the whole story itself.
 - The folder structure mirrors the story's hierarchy. Navigating the tree should feel like descending from chapters to scenes to sentences.
 
@@ -21,7 +21,7 @@ Code is a step-by-step list of operations that ultimately serve a definite purpo
 DRY removes retold stories; it does not license inventing stories nobody asked for.
 
 - Prefer duplication over the wrong abstraction. If two call sites start forcing parameters, flags, or branches into a shared helper to serve their diverging needs, inline the helper back and let them diverge.
-- YAGNI: build for the requirements that exist, not hypothetical futures. No plugin systems, generic engines, or configuration surfaces for a single concrete use case.
+- YAGNI: build for the requirements that exist, not hypothetical futures. No plugin systems, generic engines, or configuration surfaces for a single concrete use case, and no extra module, package, or service for a hypothetical future consumer.
 - Within code that is built and deployed together, keep no backward-compatibility shims: update every caller and delete the old path in the same change. Across a deploy boundary (separate services, shipped clients, persisted data, published packages and APIs) change compatibly instead, as the API design and data rules describe.
 
 ## Naming
@@ -31,22 +31,16 @@ We are telling a story, but not writing art open to interpretation. Be clear, ex
 - Names carry just enough information to be unique and descriptive — never too general, never redundant.
   - `JobQueue`, not `Queue` (too general: what is the queue for? collides with future queues) and not `JobQueueSystem` ("system" adds nothing).
   - `symbolCollection`, not `collection` (too general).
-- Functions are verbs or verb phrases (`loadUserProfile`, `mapRoomRates`); values and types are nouns (`userProfile`, `RoomRate`).
-- Booleans read as predicates: `isReady`, `hasErrors`, `shouldRetry`.
-- Do not encode types into names (no Hungarian notation) and do not abbreviate unless the abbreviation is universally understood (`id`, `url`, `max`).
 
 ## Small, modular units
 
 - Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. When a unit exceeds the cap, split it: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces.
 - One module = one concern. A file that needs "and" to describe what it does is usually two files.
-- Keep cognitive complexity low. Extract early-return branches into helpers, replace long `if/else if` chains with lookup maps, and keep side-effect orchestration out of pure transforms.
-- Maximum one level of ternary/conditional-expression nesting. Two levels means extract a helper; three means use an explicit branch structure or lookup table.
 
 ## Function and API design
 
 A function's signature is a promise to the caller; design it from the caller's point of view.
 
-- Handle edge cases first with guard clauses and early returns; the happy path reads straight down at minimal indentation. Deep nesting is a smell.
 - Keep parameters few — two or three positional parameters at most. Beyond that, take a named structure (options object, keyword arguments) so call sites are self-describing.
 - No boolean flag parameters that fork a function into two behaviors (`render(data, true)`). Split into two well-named functions, or accept a named enum/option whose meaning is visible at the call site.
 - Prefer separating commands from queries: a function either performs an effect or answers a question. When it must do both (pop, upsert, create-and-return-id), its name says so. Callers should never fear that asking a question changed something.
@@ -57,8 +51,6 @@ A function's signature is a promise to the caller; design it from the caller's p
 
 ## No dead code
 
-- Never leave commented-out code in a commit. Version control history is the archive.
-- Remove unused variables, parameters, imports, helpers, branches, and unreachable code.
 - When a feature is dropped, delete every layer of it — implementation, tests, fixtures, types, docs. Do not keep code around "in case we need it later."
 
 ## Constants over magic values
@@ -68,10 +60,8 @@ A function's signature is a promise to the caller; design it from the caller's p
 
 ## Errors
 
-- Never swallow errors. An empty `catch`/`except` block (or one containing only a comment) is forbidden.
+- Never swallow errors silently.
 - Handle an error where you can do something about it, or propagate it with added context. Log it once, where it is finally handled or at the top-level boundary, not at every layer it passes through.
-- Catch specific error types where the language allows it, and only catch where you can actually do something about the failure.
-- Fail fast on programmer errors (broken invariants, impossible states); handle expected runtime failures (network, user input, filesystem) gracefully.
 
 ## Logging tells the story
 
@@ -80,14 +70,10 @@ The story should be told not only in the code but in the logs, whether emitted t
 - Each log line reflects when something happened, which part of the story it belongs to, and what was done.
 - Namespace log output by code area so different parts of the story are distinguishable (child loggers, module-level loggers, or debug namespaces, depending on the stack).
 - Logs may carry data, but always with context — never a bare value with no explanation.
-- Use levels appropriately: errors for failures needing attention, warnings for recoverable anomalies, info for the main story beats, debug for the fine detail.
-- Keep logging clean; no leftover ad-hoc print/log statements from debugging sessions.
 
 ## Comments
 
-- Code should explain itself through naming and structure. Comments explain intent, trade-offs, and constraints the code cannot convey — the "why," not the "what."
-- Comments that narrate what the code does are noise; delete them.
-- Keep comments adjacent to the code they describe and update or remove them when the code changes.
+- Comments explain intent, trade-offs, and constraints the code cannot convey — the "why," not the "what." Comments that narrate what the code does are noise; delete them.
 
 ## Documentation
 
@@ -100,35 +86,21 @@ The story should be told not only in the code but in the logs, whether emitted t
 
 - Validate at system boundaries: user input, external APIs, files, environment. Inside those boundaries, trust your own code and types instead of re-validating defensively at every layer.
 
-## Dates, times, and money
+## Dates and money
 
-- Store and transmit timestamps in UTC (ISO 8601 with offset, or epoch); convert to a timezone only at the display layer.
-- Never do arithmetic on local wall-clock times — DST transitions and offset changes will corrupt it. Compute in UTC or with a timezone-aware library, then format.
 - A calendar date ("2026-07-08", a birthday, a check-in day) is not a timestamp. Keep date-only values in date-only types; converting them through midnight-in-some-timezone invents bugs.
-- Represent money in integer minor units (cents) or a decimal type — never binary floating point. `0.1 + 0.2` is not `0.3`.
-- Keep the currency with the amount; an amount without its currency is meaningless data.
-- Format dates, times, numbers, and currency through locale-aware APIs at display time; never hand-assemble them with string concatenation.
-
-## Performance
-
-- Correct and clear first; optimize only what measurement shows to be slow, and keep the measurement.
-- Some things need no profiler — avoid them by construction: N+1 query patterns, network or filesystem calls inside loops that could be batched, linear scans where a keyed lookup (map/set/index) fits, loading entire datasets to use one field.
-- Choose the right data structure for the access pattern; that decision usually dominates micro-optimizations.
-- Do not trade readability for speculative speed. An "optimization" without a measurement behind it is just obfuscation.
+- Keep the currency with every money amount; an amount without its currency is meaningless data.
 
 ## Dependencies
 
 - Prefer the standard library and existing project dependencies over adding a new package for something small.
-- When adding a dependency, prefer actively maintained, widely adopted packages, and add it through the project's package manager so the version is recorded in the manifest and lockfile.
 
 ## Editing existing code
 
 - The project's established conventions win over these rules. Follow them even where they differ; consistency inside a codebase beats global preference.
 - Where code you are already changing violates one of these rules and the violation is not a project convention (a swallowed error, a magic value), fix it within the lines you change and mention it. Never restyle untouched code.
 
-## Working with AI assistance
-
-Rules for AI agents (and humans pairing with them) working in a codebase.
+## Scope of work
 
 - Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.
