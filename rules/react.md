@@ -1,21 +1,14 @@
 # React Guidelines
 
-Apply only to React UI code (`.jsx`, `.tsx` components, hooks, and their support modules), on top of the JavaScript/TypeScript guidelines. Do not apply React patterns to non-React code.
+Apply only to React UI code (components, hooks, and their support modules), on top of the JavaScript/TypeScript guidelines. Do not apply React patterns to non-React code.
 
-## Rules of React (non-negotiable)
+## Hooks
 
-These are the official invariants from react.dev; the compiler and runtime assume them.
-
-- Components and hooks must be pure: same props/state/context in, same output out, and no side effects during render. Side effects run in event handlers or effects, never in the render body.
-- Props and state are immutable snapshots — never mutate them, nor values already passed to JSX or hooks.
-- Only call hooks at the top level of a component or custom hook — never in loops, conditions, nested functions, or after early returns.
-- Never call a component function directly and never pass hooks around as values; components are used via JSX, hooks are called.
-- Keep `eslint-plugin-react-hooks` on and never silence `react-hooks/exhaustive-deps` with a disable comment — fix the root cause: stabilize callbacks with `useCallback`, memoize objects with `useMemo`, or lift the value out of render scope.
+- Keep `eslint-plugin-react-hooks` on and never silence `react-hooks/exhaustive-deps` with a disable comment. Fix the cause: move the value out of render scope or into the effect, or memoize it when referential stability is the actual requirement. In projects using React Compiler, do not add manual memoization.
 
 ## Component structure
 
 - Components render; they do not orchestrate. A component receives display-ready values and callbacks (from props or a colocated hook) and returns JSX.
-- Compose small components; a component approaching the 50-line function cap should have sub-components or helpers extracted.
 - One component (plus its types, styles, tests, and sub-components) per folder or file group, following the project's established layout. Public surface goes through an index; internals stay private.
 - Data transformation (domain shape to display props) lives in pure, named mapper functions outside the component — typed input, typed output, no hooks, no side effects — so it can be unit tested in isolation.
 
@@ -39,7 +32,7 @@ These are the official invariants from react.dev; the compiler and runtime assum
 Only when the project uses an RSC-capable framework (Next.js App Router, React Router/TanStack Start in RSC mode):
 
 - Components are Server Components by default; add `"use client"` only at the leaves that genuinely need interactivity, hooks, or browser APIs.
-- Fetch data on the server, as high as practical; pass results down. Use Server Actions for mutations rather than hand-rolled API routes.
+- Fetch data on the server, as high as practical; pass results down. Use Server Actions for mutations used only by this app's UI, rather than hand-rolled API routes.
 - Compose server content into client shells by passing Server Components as `children` (the composition/donut pattern) instead of importing server modules into client files.
 - Never pass non-serializable values (functions, class instances) across the server/client boundary, and never let server-only secrets reach a client module.
 
@@ -53,15 +46,9 @@ Only when the project uses an RSC-capable framework (Next.js App Router, React R
 
 ## Accessibility
 
-- Every interactive element has an accessible name: icon-only buttons and links get `aria-label`; meaningful images get `alt`; decorative images get `alt=""`.
-- Never use positive `tabIndex`. `0` makes an element focusable, `-1` removes it from tab order; anything higher breaks assistive-tech order.
-- Every input is associated with a `<label htmlFor>` (placeholder is not a label); error messages connect via `aria-describedby`.
-- One `<h1>` per page; heading levels descend without skipping.
-- Use semantic elements (`button`, `nav`, `main`, `ul`) before reaching for ARIA roles on `div`s.
-- `target="_blank"` always pairs with `rel="noopener noreferrer"`.
+- Page-level layouts own the `<h1>`; components do not render one. Heading levels descend without skipping.
 - Wrap significant animation in `@media (prefers-reduced-motion: no-preference)`.
 
-## Events and async in the UI
+## User feedback
 
-- Event handlers return void; wrap async work so rejections are handled (`onClick={() => { void save(); }}`).
 - Surface async errors and confirmations through the project's user-facing notification mechanism (toast, banner) — never `alert`, console output, or silence.
