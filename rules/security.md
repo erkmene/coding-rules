@@ -1,6 +1,18 @@
 # Security Guidelines
 
-Apply to every file in every project. The universal principles already cover the foundations — parameterized queries and safe path handling, no user data in code-execution sinks, cryptographically secure randomness, and secrets hygiene ("Correctness and boundaries", "Secrets") — these rules extend them, they do not replace them.
+Apply to every file in every project.
+
+## Injection and untrusted input
+
+- Never build queries, commands, paths, or markup by concatenating untrusted input. Use parameterized/escaping APIs: parameterized queries for SQL/NoSQL, safe path resolution (reject `..` and absolute paths against an allowed root), framework escaping for HTML.
+- Never pass user-controlled data to code-execution sinks (`eval`-like APIs, shell strings, dynamic imports).
+- Use cryptographically secure randomness for anything security-related; ordinary PRNGs are for everything else.
+
+## Secrets
+
+- Never commit secrets: keys, certificates, tokens, credential-bearing URLs — even expired ones, even in test fixtures.
+- When a test needs a credential-shaped string, use an obvious dummy (`EXAMPLE_API_KEY`, `test-token`), never a realistic-looking value.
+- Configuration that varies by environment (including secrets) comes from the environment, not from source code.
 
 ## Never log sensitive data
 
@@ -30,6 +42,6 @@ Apply to every file in every project. The universal principles already cover the
 
 ## Dependencies
 
-- Lockfiles are committed, always (extends the universal Dependencies rules).
+- Lockfiles are committed, always.
 - An automated vulnerability audit (`npm audit`, `pip-audit`, or a Dependabot-equivalent) runs in CI; new advisories are triaged, not ignored.
 - Never install from an unpinned URL or a source outside the project's package manager.

@@ -80,7 +80,6 @@ The story should be told not only in the code but in the logs, whether emitted t
 - Each log line reflects when something happened, which part of the story it belongs to, and what was done.
 - Namespace log output by code area so different parts of the story are distinguishable (child loggers, module-level loggers, or debug namespaces, depending on the stack).
 - Logs may carry data, but always with context — never a bare value with no explanation.
-- Never log secrets, tokens, passwords, session identifiers, or personal data. When a sensitive value is needed for correlation, log a stable hash or last-four fragment instead.
 - Use levels appropriately: errors for failures needing attention, warnings for recoverable anomalies, info for the main story beats, debug for the fine detail.
 - Keep logging clean; no leftover ad-hoc print/log statements from debugging sessions.
 
@@ -97,12 +96,9 @@ The story should be told not only in the code but in the logs, whether emitted t
 - Documentation lives as close to the code it describes as possible and is updated in the same change as that code. Stale documentation is worse than none, because it is trusted.
 - Record significant architectural decisions and their reasoning in a lightweight note (an ADR or a dated section in the docs) so future readers learn why, not just what.
 
-## Correctness and boundaries
+## Boundaries
 
 - Validate at system boundaries: user input, external APIs, files, environment. Inside those boundaries, trust your own code and types instead of re-validating defensively at every layer.
-- Never build queries, commands, paths, or markup by concatenating untrusted input. Use parameterized/escaping APIs: parameterized queries for SQL/NoSQL, safe path resolution (reject `..` and absolute paths against an allowed root), framework escaping for HTML.
-- Never pass user-controlled data to code-execution sinks (`eval`-like APIs, shell strings, dynamic imports).
-- Use cryptographically secure randomness for anything security-related; ordinary PRNGs are for everything else.
 
 ## Dates, times, and money
 
@@ -113,28 +109,12 @@ The story should be told not only in the code but in the logs, whether emitted t
 - Keep the currency with the amount; an amount without its currency is meaningless data.
 - Format dates, times, numbers, and currency through locale-aware APIs at display time; never hand-assemble them with string concatenation.
 
-## User-facing text and internationalization
-
-Applies to projects that translate (or will translate) their user-facing text.
-
-- Every user-facing string comes from the translation system via a key; no hardcoded display text in code.
-- Never concatenate translated fragments to build a sentence — word order differs across languages. Use one template key with placeholders (`"{0} guest limit"`, `"This reservation has been {0}"`) and substitute at render time, so translators control the full sentence shape.
-- When part of a sentence needs styling (bold, a link), keep the sentence as a single template and inject the styled piece as a placeholder value; do not split the sentence across keys to match the markup.
-- Name keys by feature namespace, lowercase and dot-separated (`booking.summary.cta.confirm`); never reuse one key for two different meanings, even if the source-language text happens to match.
-- Do not assume pluralization is "add an s" — use the translation system's plural rules.
-
 ## Performance
 
 - Correct and clear first; optimize only what measurement shows to be slow, and keep the measurement.
 - Some things need no profiler — avoid them by construction: N+1 query patterns, network or filesystem calls inside loops that could be batched, linear scans where a keyed lookup (map/set/index) fits, loading entire datasets to use one field.
 - Choose the right data structure for the access pattern; that decision usually dominates micro-optimizations.
 - Do not trade readability for speculative speed. An "optimization" without a measurement behind it is just obfuscation.
-
-## Secrets
-
-- Never commit secrets: keys, certificates, tokens, credential-bearing URLs — even expired ones, even in test fixtures.
-- When a test needs a credential-shaped string, use an obvious dummy (`EXAMPLE_API_KEY`, `test-token`), never a realistic-looking value.
-- Configuration that varies by environment (including secrets) comes from the environment, not from source code.
 
 ## Dependencies
 
@@ -145,24 +125,10 @@ Applies to projects that translate (or will translate) their user-facing text.
 
 - The project's established conventions win over these rules. Follow them even where they differ; consistency inside a codebase beats global preference.
 - Where code you are already changing violates one of these rules and the violation is not a project convention (a swallowed error, a magic value), fix it within the lines you change and mention it. Never restyle untouched code.
-- Do not mix reformatting with logic changes; a diff that does both is unreviewable.
-
-## Definition of done
-
-Work is finished when it would pass the review of a demanding colleague, not when it merely runs.
-
-- Re-read the full diff before handing it off, as a reviewer would. Every changed line is intentional; nothing unrelated rode along.
-- The formatter, linter, and type checker pass with no new suppressions.
-- Tests pass — including the new tests this change needed. Changed behavior without a changed test is unfinished work.
-- Documentation, comments, and log messages touched by the change are updated with it.
-- Leftover scaffolding is gone: debug output, temporary files, TODO markers for things this change was supposed to do.
 
 ## Working with AI assistance
 
 Rules for AI agents (and humans pairing with them) working in a codebase.
 
-- Never invent APIs, options, or behaviors. If unsure whether a function, flag, or field exists, read the source or documentation and confirm before using it.
 - Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
-- Before writing new code, look at how the codebase already solves similar problems and follow that pattern; do not introduce a second convention alongside an existing one.
-- Verify claims by running things — the test suite, the type checker, the actual command — rather than asserting from memory that they work.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.

@@ -48,16 +48,6 @@ Applies when the project uses asyncio or an async framework built on it.
 - Use lazy interpolation in log calls (`logger.info("loaded %s rooms", count)`) so formatting only happens when the level is enabled.
 - Structured logging (e.g. `structlog`) is preferred for services; bind context (request id, job id) once and let child log lines inherit it.
 
-## Project layout and tooling
-
-These are defaults for new projects; an existing project's choices win.
-
-- `pyproject.toml` is the single source of truth for metadata, dependencies, and tool configuration. No `requirements.txt`, no `setup.py`.
-- Use `uv` for environments, installs, and lockfiles; dev dependencies go in PEP 735 `[dependency-groups]`.
-- Use Ruff for both linting and formatting, configured under `[tool.ruff]`. A good starting rule selection: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`.
-- Use a `src/` layout for packages to prevent accidental imports from the repository root.
-- Scripts and entry points stay thin — argument parsing and wiring only, delegating to importable functions (keeps the entry file a table of contents and the logic testable).
-
 ## Idioms
 
 - No mutable default arguments (`def f(items=[])`); default to `None` and create inside.

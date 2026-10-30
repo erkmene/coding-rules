@@ -30,13 +30,7 @@ Language-agnostic rules for how modules, features, and layers relate to each oth
 
 - Configuration is read once, validated at the entry point, and passed down explicitly (or exposed through a single typed config module). No `process.env` / `os.environ` reads scattered through the codebase.
 - This keeps the full configuration surface visible and typed in one place, makes code testable without environment patching, and prevents arbitrary configuration from creeping in.
-- Secrets come from the environment, never from source (universal Secrets rules).
 
 ## When to split — and when not to
 
 - Extracting a module, package, or service is justified by a boundary — different consumers, different rates of change, different deployment needs — not by line count alone (size caps are handled by the universal rules).
-- Never split speculatively. A second package, a plugin system, or a service boundary for a hypothetical future consumer is YAGNI (universal Abstraction discipline).
-
-## Decisions
-
-- Significant architectural decisions and their reasoning are recorded per the universal Documentation rules (an ADR or dated note) — future readers need the why, not just the what.

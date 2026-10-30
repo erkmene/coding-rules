@@ -29,6 +29,5 @@ Apply to projects with a database or other durable store — schema design, migr
 
 ## Queries
 
-- No queries inside loops — batch them (the universal N+1 rule, enforced here where it originates).
 - Columns used in filters and joins are indexed; a query on a hot path has had its plan checked, and the measurement is kept (universal Performance rules).
 - Fetch what the use case needs, not entire rows or datasets for one field.

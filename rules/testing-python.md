@@ -36,10 +36,6 @@ def test_load_profile(): ...   # no condition, no outcome
 - The standard library or third-party packages.
 - Trivial passthroughs and generated code.
 
-## Choosing the test level
-
-Default to the lowest level that can catch the bug: unit tests for pure logic, integration tests for wiring (route + service + a real test database or faked boundary), end-to-end tests only for the few critical user journeys. The higher the level, the fewer the tests — each E2E case must earn its runtime and maintenance cost. Do not re-prove at a higher level what a lower level already covers.
-
 ## Fixtures and parametrization
 
 - Use fixtures for shared setup instead of module-level state or copy-pasted arrangement blocks; keep fixtures small and composable.
@@ -62,7 +58,3 @@ Default to the lowest level that can catch the bug: unit tests for pure logic, i
 
 - One behavior per test. Multiple `assert` lines are fine when they describe a single outcome (e.g. fields of one returned object); asserting two unrelated behaviors means two tests.
 - Assert on values and structure, not on `repr` strings or log message substrings, unless the message itself is the contract.
-
-## Flaky tests are bugs
-
-Do not add retries or skips. The usual culprits are shared state, real time, real network, and test-order dependence — fix the isolation, not the symptom. Running with randomized order (`pytest-randomly`) keeps ordering honesty enforced.

@@ -5,8 +5,7 @@ Apply to version-control activity — commits, branches, pull requests — in ev
 ## Commits
 
 - Commits are atomic: one logical change per commit, and the build and tests pass at every commit.
-- Reformatting, renames, and other mechanical changes are separate commits from logic changes — a diff that mixes both is unreviewable (universal "Editing existing code" rule, applied at the commit level).
-- Nothing unrelated rides along; the staged diff is re-read before committing, per the universal Definition of done.
+- Reformatting, renames, and other mechanical changes are separate commits from logic changes — a diff that mixes both is unreviewable.
 
 ## Commit messages
 
@@ -28,4 +27,4 @@ Apply to version-control activity — commits, branches, pull requests — in ev
 ## History
 
 - Never force-push a shared branch or rewrite published history.
-- A secret that reaches a commit is compromised: rotate it immediately. Deleting the commit does not remove it from history, reflogs, or existing clones (universal Secrets rules).
+- A secret that reaches a commit is compromised: rotate it immediately. Deleting the commit does not remove it from history, reflogs, or existing clones (security rules).

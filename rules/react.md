@@ -15,7 +15,6 @@ These are the official invariants from react.dev; the compiler and runtime assum
 ## Component structure
 
 - Components render; they do not orchestrate. A component receives display-ready values and callbacks (from props or a colocated hook) and returns JSX.
-- Compose small components; a component approaching the 50-line function cap should have sub-components or helpers extracted.
 - One component (plus its types, styles, tests, and sub-components) per folder or file group, following the project's established layout. Public surface goes through an index; internals stay private.
 - Data transformation (domain shape to display props) lives in pure, named mapper functions outside the component — typed input, typed output, no hooks, no side effects — so it can be unit tested in isolation.
 
@@ -61,7 +60,6 @@ Only when the project uses an RSC-capable framework (Next.js App Router, React R
 - `target="_blank"` always pairs with `rel="noopener noreferrer"`.
 - Wrap significant animation in `@media (prefers-reduced-motion: no-preference)`.
 
-## Events and async in the UI
+## User feedback
 
-- Event handlers return void; wrap async work so rejections are handled (`onClick={() => { void save(); }}`).
 - Surface async errors and confirmations through the project's user-facing notification mechanism (toast, banner) — never `alert`, console output, or silence.

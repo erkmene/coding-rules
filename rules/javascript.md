@@ -37,7 +37,6 @@ Apply to all JavaScript code (`.js`, `.mjs`, `.cjs`, `.jsx`) and, together with 
 ## Console and logging
 
 - No stray `console.log` in committed code. Use the project's logger; where only `console` exists, use the appropriate level (`console.error` in catches, `console.warn` for recoverable anomalies, `console.debug` for diagnostics).
-- Follow the universal logging rules: namespaced, contextual, story-telling logs (`debug` namespaces or `pino` child loggers are good models).
 
 ## Formatting and linting
 

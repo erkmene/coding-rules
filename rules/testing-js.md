@@ -40,10 +40,6 @@ it('should render', ...);   // no condition, no outcome
 - CSS and visual appearance (that belongs to visual regression tooling, not unit tests).
 - Trivial getters and one-line passthroughs.
 
-## Choosing the test level
-
-Default to the lowest level that can catch the bug: unit tests for logic and pure transforms, integration tests for wiring (component + hook + mocked network together), end-to-end tests only for the few critical user journeys. The higher the level, the fewer the tests — each E2E case must earn its runtime and maintenance cost. Do not re-prove at a higher level what a lower level already covers.
-
 ## UI queries (Testing Library)
 
 Use the highest-priority query that works, most to least preferred:
@@ -82,19 +78,3 @@ Appropriate for: the default render of a small leaf component, one snapshot per 
 Not appropriate for: output that varies per locale/timestamp/UUID, container or page components, or anything over ~50 lines — use targeted assertions instead.
 
 When a snapshot fails: read the diff; update only if the change is intentional, otherwise fix the regression. Delete snapshots in the same commit as the component they belong to.
-
-## Flaky tests are bugs
-
-Do not add retries or skip them. Common causes and fixes:
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Passes alone, fails in suite | Shared state leak | Reset state/storage in `beforeEach` |
-| Assertion fires before update | Missing `await` | `findBy*` / `await waitFor(...)` |
-| Time-based mismatch | Real `new Date()` | Fake timers + fixed system time |
-| Locale-dependent output | Real locale formatting | Pin the locale in test setup |
-
-## Coverage
-
-- New code ships with tests that keep the project's coverage thresholds green. Test files, stories, type declarations, constants, and re-export indexes are excluded from coverage, not tested for its own sake.
-- Coverage is a floor, not a goal — a covered line with no meaningful assertion is worse than an uncovered one, because it looks safe.
