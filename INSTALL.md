@@ -21,7 +21,8 @@ Read this whole file before acting, then follow the section that matches the req
 3. Create, change or delete only:
    - the rules folder;
    - `coding-rules-*` files and folders that the manifest lists or that you are creating now;
-   - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file.
+   - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
+   - an instructions file that does not exist yet, and the parent directories that wiring needs. Record both in the manifest.
    
    If anything else is in the way, stop and ask the user.
 4. Use only mechanisms your tool documents. If you are not sure your tool supports a mechanism, check its documentation. If you still cannot confirm it, use the fallback for that class. Never guess at a configuration format.
@@ -37,15 +38,15 @@ This table is the only place where rule scope is defined.
 | `rules/architecture.md` | always | every session |
 | `rules/security.md` | always | every session |
 | `rules/git.md` | activity | committing, writing commit messages, creating branches, opening or updating pull requests |
-| `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers,api}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
-| `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{models,repositories,db}/**` |
+| `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
+| `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{repositories,db}/**` |
 | `rules/i18n.md` | opt-in, activity + paths | only if the user opts in; then when writing or changing user-facing text or translations, and for files matching `**/{locales,i18n,messages}/**` |
 | `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}` |
 | `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}` |
 | `rules/python.md` | paths | `**/*.py` |
 | `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging, dependency or tooling setup |
 | `rules/react.md` | paths | `**/*.{jsx,tsx}`, `**/use[A-Z]*.{ts,js}`, `**/hooks/**/*.{ts,js}` |
-| `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching every path listed for `testing-js.md` and `testing-python.md` |
+| `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching any of `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**`, `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `rules/testing-js.md` | paths | `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**` |
 | `rules/testing-python.md` | paths | `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `checklists/review.md` | review | before handing work off |
@@ -65,25 +66,28 @@ Write references as paths your tool resolves:
 
 ## The managed block
 
-Put this block in each instructions file you wire. Fill in the angle-bracket parts, and keep everything else exactly as written:
+Put this block in each instructions file you wire. Fill in the angle-bracket parts, and keep everything else exactly as written. Use the first line that matches the mode:
 
 ```markdown
 <!-- coding-rules:begin -->
 ## Coding rules
 
-This project follows the coding rules in `<rules folder>` (`<version>`, <personal|project> install). The project's own established conventions win over these rules.
+<project mode:> This project follows the coding rules in `<rules folder>` (`<version>`, project install). The project's own established conventions win over these rules.
+<personal mode:> Follow the coding rules in `<rules folder>` (`<version>`, personal install) in every project. Each project's own established conventions win over these rules.
 
-<one fallback line per rule that could not be wired natively, or nothing>
+<one fallback line per rule that some tool reading this file could not wire natively, or nothing>
 
-Before handing work off, <run the `coding-rules-reviewer` subagent | go through `<path to checklists/review.md>`>.
+Before handing work off, run the `coding-rules-reviewer` subagent if your tool has it; otherwise go through `<path to checklists/review.md>`.
 <!-- coding-rules:end -->
 ```
+
+Several tools may read the same instructions file (for example `AGENTS.md`). Include a fallback line if any tool reading the file needs it, and start each fallback line with "Unless your tool already loads it:", so a tool that wired the rule natively doesn't load it twice.
 
 If the instructions file does not exist, create it with only the block. If it already has a block, replace the block and leave the rest of the file alone.
 
 ## The manifest
 
-`manifest.json` in the rules folder, with these fields:
+`manifest.json` in the rules folder, with these fields. Write every path in it as an absolute path in personal mode, and relative to the project root in project mode.
 
 - `source`: the repository URL.
 - `version`: the release tag, or `main`.
@@ -91,7 +95,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `installedAt`: the date, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
-- `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]`. Do not list a directory that already existed.
+- `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
   - wiring files;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
@@ -127,8 +131,8 @@ If the instructions file does not exist, create it with only the block. If it al
 ## Update
 
 1. Read the manifest. If there is none, do an Install instead.
-2. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on `main`. If the installed version is already the target, say so and stop.
-3. Read every `CHANGELOG.md` entry newer than the installed version (from the target version's changelog), and note each entry's **Action**.
+2. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on `main`. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
+3. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
 4. Get the target version.
    - Personal: in the clone, fetch and check out the target. If the clone has local changes, stop and ask.
    - Project: copy fresh files as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
@@ -136,7 +140,9 @@ If the instructions file does not exist, create it with only the block. If it al
 6. Reconcile the wiring with the table in the target version's `INSTALL.md`:
    - create wiring that is missing;
    - replace wiring that changed (hard rule 5 applies);
-   - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed, and any directory in `directories` that this leaves empty.
+   - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
+   - in project mode, delete manifest-listed copied files that the target version no longer ships, such as a removed or renamed rule (hard rule 5 applies);
+   - delete any directory in `directories` that this leaves empty.
 7. Rewrite the managed block and the manifest, then verify as in Install step 6.
 8. Report:
    - the old and new versions;

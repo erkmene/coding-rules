@@ -6,7 +6,7 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 - **re-wire**: the scope table in `INSTALL.md` changed. The Update procedure handles it.
 - **manual**: a step the agent must take or ask about, described in the entry.
 
-Version numbers: the major version goes up when an Action is manual, the minor version for re-wire actions or new rules, and the patch version for wording only.
+Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
 ## Unreleased
 

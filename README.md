@@ -93,14 +93,10 @@ To keep every line in an agent's context worth its cost, two kinds of rules were
 - locale-aware formatting;
 - performance basics: measure first, avoid N+1 queries, pick the right data structure;
 - parameterized queries and safe path handling; no user data in `eval` or shell strings; secure randomness for security;
-- keeping secrets out of source and taking configuration from the environment;
-- adaptive password hashing;
-- not trusting client-supplied identity;
+- taking configuration from the environment;
 - HTTP method and status-code semantics; plural resource names;
-- not leaking internals in error responses;
 - wrapping multi-write operations in a transaction;
 - imperative commit subjects;
-- rotating leaked secrets;
 - the Rules of React;
 - standard pytest and Testing Library practice.
 
