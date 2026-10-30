@@ -33,7 +33,7 @@ The agent wires each rule with its own tool's native mechanism: always-on rules,
 
 ## Updating and removing
 
-> Update the coding rules. Follow coding-rules/INSTALL.md.
+> Update the coding rules. Follow the INSTALL.md in the coding-rules folder.
 
 The agent:
 1. reads the manifest;

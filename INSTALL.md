@@ -9,7 +9,7 @@ Read this whole file before acting, then follow the section that matches the req
 ## Terms
 
 - **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on `main`.
-- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/` and `CHANGELOG.md`.
+- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
 - **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root.
 - **Manifest**: `manifest.json` in the rules folder. It records what was installed.
@@ -45,7 +45,7 @@ This table is the only place where rule scope is defined.
 | `rules/python.md` | paths | `**/*.py` |
 | `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging, dependency or tooling setup |
 | `rules/react.md` | paths | `**/*.{jsx,tsx}`, `**/use[A-Z]*.{ts,js}`, `**/hooks/**/*.{ts,js}` |
-| `rules/testing.md` | paths | every path listed for `testing-js.md` and `testing-python.md` |
+| `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching every path listed for `testing-js.md` and `testing-python.md` |
 | `rules/testing-js.md` | paths | `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**` |
 | `rules/testing-python.md` | paths | `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `checklists/review.md` | review | before handing work off |
@@ -95,7 +95,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
   - wiring files;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
-  - in project mode, each copied rule, checklist and changelog file.
+  - in project mode, each copied file: rules, checklists, `INSTALL.md` and `CHANGELOG.md`.
 
 ## Install
 
@@ -107,7 +107,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
 2. **Get the source.**
    - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
-   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop. If it is a git submodule, follow [Migrating from the submodule layout](#migrating-from-the-submodule-layout) first. Otherwise, ask the user.
+   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop. If it is a git submodule, follow [Migrating from the submodule layout](#migrating-from-the-submodule-layout) first. Otherwise, ask the user.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.**
@@ -136,7 +136,7 @@ If the instructions file does not exist, create it with only the block. If it al
 6. Reconcile the wiring with the table in the target version's `INSTALL.md`:
    - create wiring that is missing;
    - replace wiring that changed (hard rule 5 applies);
-   - delete manifest-listed wiring for rules that no longer exist, and any directory in `directories` that this leaves empty.
+   - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed, and any directory in `directories` that this leaves empty.
 7. Rewrite the managed block and the manifest, then verify as in Install step 6.
 8. Report:
    - the old and new versions;
@@ -149,7 +149,7 @@ If the instructions file does not exist, create it with only the block. If it al
 
 1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
-3. Project mode: delete `coding-rules/`. Personal mode: ask whether to delete the clone.
+3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: ask whether to delete the clone.
 4. Report what was removed. In project mode, remind the user to commit the changes.
 
 ## Migrating from the submodule layout
@@ -161,11 +161,16 @@ Projects set up with the old `install.sh` have:
 
 To migrate:
 1. Delete the `coding-rules-*` stub files in `.cursor/rules/` and `.claude/rules/`.
-2. Remove the submodule:
+2. Check the submodule for work that would be lost, because the old layout has no manifest to protect it:
+   - uncommitted or untracked changes: `git -C coding-rules status --porcelain`;
+   - commits not on any remote branch: `git -C coding-rules log --branches --not --remotes --oneline`.
+   
+   If either shows anything, list it and ask the user how to preserve it (for example by pushing it, or by saving a patch) before going on.
+3. Remove the submodule:
    - `git submodule deinit -f coding-rules`
    - `git rm -f coding-rules`
    - delete `.git/modules/coding-rules`
-3. Compare the root `AGENTS.md` and `CLAUDE.md` with `templates/AGENTS.md` and `templates/CLAUDE.md` at commit `4b35bfb` of the source.
+4. Compare the root `AGENTS.md` and `CLAUDE.md` with `templates/AGENTS.md` and `templates/CLAUDE.md` at commit `4b35bfb` of the source.
    - Identical: ask the user whether to delete them.
    - Edited: leave them, and point out to the user the parts that describe the old layout.
-4. Do an Install.
+5. Do an Install.
