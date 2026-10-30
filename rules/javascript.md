@@ -13,7 +13,7 @@ Apply to all JavaScript code (`.js`, `.mjs`, `.cjs`, `.jsx`) and, together with 
 ## Asynchrony
 
 - Prefer `async`/`await` over callbacks.
-- Prefer `try`/`catch` blocks over promise `.then()`/`.catch()` chains.
+- Prefer `try`/`catch` blocks over promise `.then()`/`.catch()` chains. A `.catch()` is fine for deliberate fire-and-forget calls.
 - Never leave a promise floating. Every promise is awaited, returned, or explicitly marked as fire-and-forget (e.g. `void doThing()`), with errors handled either way.
 - Run independent async work concurrently with `Promise.all` (or `allSettled` when partial failure is acceptable) instead of awaiting sequentially.
 - Event handlers and other void-returning callbacks must not be `async` directly; wrap the async call so rejections are handled: `onClick={() => { void save(); }}`.

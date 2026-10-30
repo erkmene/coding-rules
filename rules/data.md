@@ -24,7 +24,7 @@ Apply to projects with a database or other durable store — schema design, migr
 
 ## Modeling defaults
 
-- Every table gets `created_at` and `updated_at`, stored in UTC (universal date rules; money columns likewise follow the universal money rules — minor units with currency).
+- Every mutable entity table gets `created_at` and `updated_at`, stored in UTC (universal date rules; money columns likewise follow the universal money rules — minor units with currency).
 - Soft-delete versus hard-delete is decided once per project and applied consistently, not re-decided per table.
 
 ## Queries

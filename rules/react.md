@@ -10,7 +10,7 @@ These are the official invariants from react.dev; the compiler and runtime assum
 - Props and state are immutable snapshots — never mutate them, nor values already passed to JSX or hooks.
 - Only call hooks at the top level of a component or custom hook — never in loops, conditions, nested functions, or after early returns.
 - Never call a component function directly and never pass hooks around as values; components are used via JSX, hooks are called.
-- Keep `eslint-plugin-react-hooks` on and never silence `react-hooks/exhaustive-deps` with a disable comment — fix the root cause: stabilize callbacks with `useCallback`, memoize objects with `useMemo`, or lift the value out of render scope.
+- Keep `eslint-plugin-react-hooks` on and never silence `react-hooks/exhaustive-deps` with a disable comment. Fix the cause: move the value out of render scope or into the effect, or memoize it when referential stability is the actual requirement. In projects using React Compiler, do not add manual memoization.
 
 ## Component structure
 
@@ -39,7 +39,7 @@ These are the official invariants from react.dev; the compiler and runtime assum
 Only when the project uses an RSC-capable framework (Next.js App Router, React Router/TanStack Start in RSC mode):
 
 - Components are Server Components by default; add `"use client"` only at the leaves that genuinely need interactivity, hooks, or browser APIs.
-- Fetch data on the server, as high as practical; pass results down. Use Server Actions for mutations rather than hand-rolled API routes.
+- Fetch data on the server, as high as practical; pass results down. Use Server Actions for mutations used only by this app's UI, rather than hand-rolled API routes.
 - Compose server content into client shells by passing Server Components as `children` (the composition/donut pattern) instead of importing server modules into client files.
 - Never pass non-serializable values (functions, class instances) across the server/client boundary, and never let server-only secrets reach a client module.
 
@@ -56,7 +56,7 @@ Only when the project uses an RSC-capable framework (Next.js App Router, React R
 - Every interactive element has an accessible name: icon-only buttons and links get `aria-label`; meaningful images get `alt`; decorative images get `alt=""`.
 - Never use positive `tabIndex`. `0` makes an element focusable, `-1` removes it from tab order; anything higher breaks assistive-tech order.
 - Every input is associated with a `<label htmlFor>` (placeholder is not a label); error messages connect via `aria-describedby`.
-- One `<h1>` per page; heading levels descend without skipping.
+- Page-level layouts own the `<h1>`; components do not render one. Heading levels descend without skipping.
 - Use semantic elements (`button`, `nav`, `main`, `ul`) before reaching for ARIA roles on `div`s.
 - `target="_blank"` always pairs with `rel="noopener noreferrer"`.
 - Wrap significant animation in `@media (prefers-reduced-motion: no-preference)`.

@@ -5,7 +5,7 @@ Apply when writing or editing tests for JS/TS code (`*.test.*`, `*.spec.*`, `__t
 ## Files and structure
 
 - Co-locate the test next to its source: `Foo.ts` gets `Foo.test.ts` in the same folder (`useFoo.test.ts`, `mapFoo.test.ts` likewise).
-- One test file per source file; never group tests for multiple modules in one file.
+- Unit tests: one test file per source file. Integration and end-to-end tests live where the project keeps them.
 - Structure with `describe` per unit under test and `it` per case.
 
 ## Test names read as behavior

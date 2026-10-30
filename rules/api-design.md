@@ -22,19 +22,19 @@ Apply when designing or implementing HTTP (REST) APIs; skip for projects with no
 
 ## Status codes
 
-- Status codes carry the semantics RFC 9110 gives them: `400` malformed request, `401` unauthenticated, `403` unauthorized, `404` not found, `409` state conflict, `422` semantically invalid, `5xx` server fault only.
+- Status codes carry the semantics RFC 9110 gives them: `400` malformed request, `401` unauthenticated, `403` authenticated but not permitted (or `404` when even the resource's existence is secret), `404` not found, `409` state conflict, `422` semantically invalid, `5xx` server fault only.
 - Never return `200` with an error in the body. The status line is the first thing every client, proxy, and monitor reads; it must tell the truth.
 
 ## Errors: one envelope
 
 - The entire API uses one error envelope. Default to the RFC 9457 Problem Details shape unless the project already has an established one.
-- Every error carries stable, machine-mappable identifiers consumers can branch on — e.g. `errorCode` (unique and stable), `errorName`, `errorCategory` — plus a human-readable message. The message is for people and is never a contract: it may change freely and must never be parsed.
+- Every error carries stable, machine-mappable identifiers consumers can branch on: the Problem Details `type` URI, plus extension members such as `errorCode` when needed. It also carries a human-readable message. The message is for people and is never a contract: it may change freely and must never be parsed.
 - Validation failures include per-field details (field path, violated rule) so clients can render errors in place.
 - Internal details never leak into a response: no stack traces, raw exception text, SQL, or internal identifiers.
 
 ## Pagination
 
-- Every collection endpoint paginates from day one — retrofitting pagination is a breaking change.
+- Every collection that can grow paginates from day one — retrofitting pagination is a breaking change.
 - Prefer cursor-based pagination for anything that grows; include the paging metadata (next cursor / total where feasible) in a consistent shape across all endpoints.
 
 ## Idempotency

@@ -6,7 +6,7 @@ Apply to all Python code (`.py`). Universal principles apply first. Target moder
 
 - Follow PEP 8; let the project's formatter be the authority (Ruff's formatter or Black — do not hand-format against it).
 - Naming: `snake_case` for functions, variables, and modules; `PascalCase` for classes; `UPPER_SNAKE_CASE` for constants; a leading underscore for internal helpers.
-- f-strings for interpolation, never `%` formatting or `.format()` (exception: logging calls, below).
+- f-strings for inline interpolation, not `%` formatting or `.format()` (exceptions: logging calls, below, and templates held as data).
 - Prefer comprehensions and generator expressions over `map`/`filter` with lambdas, and over accumulate-in-a-loop patterns — but never nest comprehensions past the point of readability.
 
 ## Type hints
@@ -35,7 +35,7 @@ Applies when the project uses asyncio or an async framework built on it.
 - Never make blocking calls inside `async def`: `time.sleep`, synchronous HTTP clients, synchronous DB drivers, heavy CPU work. Use the async equivalent (`asyncio.sleep`, an async client/driver) or push the blocking work to a thread (`asyncio.to_thread`).
 - Prefer structured concurrency: `asyncio.TaskGroup` (3.11+) over bare `asyncio.create_task` or hand-rolled `gather` bookkeeping — tasks cannot outlive their scope, and one failure cancels the siblings and propagates.
 - Never fire-and-forget a bare `create_task`: the event loop holds only weak references, so an unreferenced task can be garbage-collected mid-flight and its exception silently lost. Hold a reference and consume its result, or use a `TaskGroup`.
-- Every await on external I/O gets a timeout (`asyncio.timeout(...)`); a hung dependency must not hang the service.
+- External I/O has a timeout, set on the client or per call (`asyncio.timeout(...)`); a hung dependency must not hang the service.
 
 ## Resources and I/O
 
@@ -44,7 +44,7 @@ Applies when the project uses asyncio or an async framework built on it.
 
 ## Logging
 
-- Use the `logging` module with a module-level logger: `logger = logging.getLogger(__name__)`. The `__name__` namespace gives the story-telling, per-module context the universal rules require. Never use `print` for diagnostics in library or application code.
+- Use the `logging` module with a module-level logger: `logger = logging.getLogger(__name__)`. The `__name__` namespace gives the story-telling, per-module context the universal rules require. Never use `print` for diagnostics; it is only for a CLI's actual output.
 - Use lazy interpolation in log calls (`logger.info("loaded %s rooms", count)`) so formatting only happens when the level is enabled.
 - Structured logging (e.g. `structlog`) is preferred for services; bind context (request id, job id) once and let child log lines inherit it.
 

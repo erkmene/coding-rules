@@ -6,7 +6,7 @@ Apply when writing or editing Python tests (`test_*.py`, `*_test.py`, `tests/`).
 
 - Use pytest. Do not write new `unittest.TestCase` classes; plain functions with `assert` are the standard.
 - Mirror the source layout under `tests/` (or co-locate per the project's convention): `src/queue/manager.py` gets `tests/queue/test_manager.py`.
-- One test module per source module; group cases with plain functions, or classes without inheritance (`class TestJobQueue:`) when grouping helps.
+- Unit tests: one test module per source module (integration and end-to-end tests live where the project keeps them); group cases with plain functions, or classes without inheritance (`class TestJobQueue:`) when grouping helps.
 
 ## Test names read as behavior
 
@@ -56,7 +56,7 @@ Default to the lowest level that can catch the bug: unit tests for pure logic, i
 
 - Mock at the boundary the code under test talks to (HTTP layer, database session, message bus client), not deep internals.
 - Prefer injecting fakes/stubs through parameters over patching module internals; reach for `monkeypatch`/`unittest.mock.patch` when injection is not available, and patch where the name is looked up, not where it is defined.
-- Async code is tested with `pytest-asyncio`; do not run event loops by hand in tests.
+- Async code is tested with the project's async pytest plugin (pytest-asyncio or anyio); do not run event loops by hand in tests.
 
 ## Assertions
 

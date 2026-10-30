@@ -13,19 +13,16 @@ Code is a step-by-step list of operations that ultimately serve a definite purpo
 
 ## Don't repeat yourself (DRY)
 
-- Each part of the story is told in detail exactly once, then only referenced.
-- If you catch yourself writing a similar story to one told before, go back to the earlier one, extend it to cover the new case, and reference it from both places.
+- Extract a shared piece on the third occurrence, or at the second when the copies encode the same rule and must change together. Code that merely looks alike may stay duplicated (see "Abstraction discipline").
 - When shared code lives in a location that reflects only its original, narrower use, move it up to a level where all consumers can reference it naturally. Example: a utility in `queue/utils/map.ts` that `jobs/manager.ts` also needs moves to `utils/map.ts`, and both reference it there.
-- Duplication across files is still duplication. Extract to a shared module rather than copy-pasting a block that already exists elsewhere.
 
 ## Abstraction discipline — the counterweight to DRY
 
 DRY removes retold stories; it does not license inventing stories nobody asked for.
 
-- Apply the rule of three: two occurrences of similar code may be coincidence — tolerate the duplication; the third occurrence proves the pattern — extract it then.
 - Prefer duplication over the wrong abstraction. If two call sites start forcing parameters, flags, or branches into a shared helper to serve their diverging needs, inline the helper back and let them diverge.
 - YAGNI: build for the requirements that exist, not hypothetical futures. No plugin systems, generic engines, or configuration surfaces for a single concrete use case.
-- No backward-compatibility shims or translation layers inside a codebase you control. When something changes, update every caller and delete the old path in the same change.
+- Within code that is built and deployed together, keep no backward-compatibility shims: update every caller and delete the old path in the same change. Across a deploy boundary (separate services, shipped clients, persisted data, published packages and APIs) change compatibly instead, as the API design and data rules describe.
 
 ## Naming
 
@@ -40,8 +37,8 @@ We are telling a story, but not writing art open to interpretation. Be clear, ex
 
 ## Small, modular units
 
-- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. When a unit approaches the cap, split it: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces.
-- One module = one concern. A file that needs "and" to describe what it does is two files.
+- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. When a unit exceeds the cap, split it: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces.
+- One module = one concern. A file that needs "and" to describe what it does is usually two files.
 - Keep cognitive complexity low. Extract early-return branches into helpers, replace long `if/else if` chains with lookup maps, and keep side-effect orchestration out of pure transforms.
 - Maximum one level of ternary/conditional-expression nesting. Two levels means extract a helper; three means use an explicit branch structure or lookup table.
 
@@ -52,7 +49,7 @@ A function's signature is a promise to the caller; design it from the caller's p
 - Handle edge cases first with guard clauses and early returns; the happy path reads straight down at minimal indentation. Deep nesting is a smell.
 - Keep parameters few — two or three positional parameters at most. Beyond that, take a named structure (options object, keyword arguments) so call sites are self-describing.
 - No boolean flag parameters that fork a function into two behaviors (`render(data, true)`). Split into two well-named functions, or accept a named enum/option whose meaning is visible at the call site.
-- Separate commands from queries: a function either performs an effect or answers a question, not both. Callers should never fear that asking a question changed something.
+- Prefer separating commands from queries: a function either performs an effect or answers a question. When it must do both (pop, upsert, create-and-return-id), its name says so. Callers should never fear that asking a question changed something.
 - Return consistent shapes. A function that returns a list returns an empty list — not `null` — when there is nothing; a lookup that can miss says so in its signature (optional/nullable type), not by surprise.
 - Do not mutate arguments. Inputs are inputs; produce and return new values unless the function's stated purpose is in-place mutation.
 - Make interfaces easy to use correctly and hard to misuse: pick defaults that are safe, and make the dangerous variant the one that requires explicit opt-in.
@@ -72,7 +69,7 @@ A function's signature is a promise to the caller; design it from the caller's p
 ## Errors
 
 - Never swallow errors. An empty `catch`/`except` block (or one containing only a comment) is forbidden.
-- At minimum, log the error with context; ideally, handle it meaningfully or rethrow/propagate it.
+- Handle an error where you can do something about it, or propagate it with added context. Log it once, where it is finally handled or at the top-level boundary, not at every layer it passes through.
 - Catch specific error types where the language allows it, and only catch where you can actually do something about the failure.
 - Fail fast on programmer errors (broken invariants, impossible states); handle expected runtime failures (network, user input, filesystem) gracefully.
 
@@ -96,7 +93,7 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Documentation
 
 - Every project has a README that gets a newcomer from clone to running in minutes: what this is, how to set it up, how to run it, how to test it. Like the entry file, it is the table of contents of the project's story.
-- Public APIs — anything consumed outside its own module — get doc comments (docstrings, TSDoc, etc.) covering intent, non-obvious edge cases, and failure behavior. Never restate the signature in prose.
+- Public APIs (anything consumed outside its own module) get doc comments (docstrings, TSDoc, etc.) when intent, edge cases, or failure behavior are not obvious from the name and types. Never restate the signature in prose.
 - Documentation lives as close to the code it describes as possible and is updated in the same change as that code. Stale documentation is worse than none, because it is trusted.
 - Record significant architectural decisions and their reasoning in a lightweight note (an ADR or a dated section in the docs) so future readers learn why, not just what.
 
@@ -146,8 +143,8 @@ Applies to projects that translate (or will translate) their user-facing text.
 
 ## Editing existing code
 
-- Follow the conventions already established in the file and project, even when they differ from your defaults; consistency inside a codebase beats global preference.
-- Fix deviations from these rules on touch — when you edit code that violates a rule, bring it into line rather than replicating the violation.
+- The project's established conventions win over these rules. Follow them even where they differ; consistency inside a codebase beats global preference.
+- Where code you are already changing violates one of these rules and the violation is not a project convention (a swallowed error, a magic value), fix it within the lines you change and mention it. Never restyle untouched code.
 - Do not mix reformatting with logic changes; a diff that does both is unreviewable.
 
 ## Definition of done
@@ -165,7 +162,7 @@ Work is finished when it would pass the review of a demanding colleague, not whe
 Rules for AI agents (and humans pairing with them) working in a codebase.
 
 - Never invent APIs, options, or behaviors. If unsure whether a function, flag, or field exists, read the source or documentation and confirm before using it.
-- Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead. (Bringing a line you are already editing into compliance with these rules, per "Editing existing code," is in scope; rewriting untouched code is not.)
+- Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
 - Before writing new code, look at how the codebase already solves similar problems and follow that pattern; do not introduce a second convention alongside an existing one.
 - Verify claims by running things — the test suite, the type checker, the actual command — rather than asserting from memory that they work.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.

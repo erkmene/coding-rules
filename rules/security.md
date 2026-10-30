@@ -20,12 +20,12 @@ Apply to every file in every project. The universal principles already cover the
 
 ## Least privilege
 
-- Tokens, API scopes, database accounts, and service credentials get the narrowest access that works. A read path uses a read-only credential; a service touching one table does not hold rights to the schema.
+- Tokens, API scopes, database accounts, and service credentials get the narrowest access that works in deployed environments. A service touching one table does not hold rights to the schema.
 
 ## Passwords and data protection
 
 - Passwords are stored only through an adaptive hashing algorithm (argon2 or bcrypt) — never reversible encryption, never a fast hash.
-- TLS is assumed for every connection, internal ones included; plaintext transport is never "fine for now".
+- Deployed connections use TLS, internal ones included; TLS terminated by a service mesh counts. Local development may use plaintext.
 - Store only the sensitive data the feature actually needs. Data you never stored cannot leak.
 
 ## Dependencies
