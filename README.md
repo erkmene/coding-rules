@@ -50,7 +50,7 @@ To remove the rules, ask the agent to uninstall them; it removes exactly what th
 |------|--------|-------|
 | `rules/universal.md` | Code as a story, abstraction discipline, naming, function design, errors, logging, docs, scope of work | always |
 | `rules/architecture.md` | Dependency direction, feature boundaries, functional core, adapters, configuration | always |
-| `rules/security.md` | Sensitive data, object-level authorization, fail closed, least privilege | always |
+| `rules/security.md` | Secrets, sensitive data, authorization, fail closed, least privilege, password storage | always |
 | `rules/git.md` | Commits, branches, pull requests | when doing version-control work |
 | `rules/api-design.md` | HTTP APIs: compatibility, versioning, errors, pagination, idempotency | for API work or API files |
 | `rules/data.md` | Schema compatibility, migrations, transactions, queries | for schema and query work or data files |

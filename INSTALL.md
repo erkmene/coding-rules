@@ -51,6 +51,8 @@ This table is the only place where rule scope is defined.
 | `rules/testing-python.md` | paths | `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `checklists/review.md` | review | before handing work off |
 
+Keep the `testing.md` globs equal to the union of the `testing-js.md` and `testing-python.md` globs.
+
 How to wire each class:
 
 - **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file. Otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task."
@@ -66,7 +68,7 @@ Write references as paths your tool resolves:
 
 ## The managed block
 
-Put this block in each instructions file you wire. Fill in the angle-bracket parts, and keep everything else exactly as written. Use the first line that matches the mode:
+Put this block in each instructions file you wire. Keep only the line for the current mode, without its `<project mode:>` or `<personal mode:>` label. Fill in the remaining angle-bracket parts, and keep everything else exactly as written:
 
 ```markdown
 <!-- coding-rules:begin -->
@@ -131,20 +133,25 @@ If the instructions file does not exist, create it with only the block. If it al
 ## Update
 
 1. Read the manifest. If there is none, do an Install instead.
-2. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on `main`. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
-3. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
-4. Get the target version.
-   - Personal: in the clone, fetch and check out the target. If the clone has local changes, stop and ask.
-   - Project: copy fresh files as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
-5. Carry out every **manual** action. Ask when an action needs a decision.
-6. Reconcile the wiring with the table in the target version's `INSTALL.md`:
+2. Fetch the source, without changing any installed file yet:
+   - Personal: run `git fetch --tags` in the clone. If the clone has local changes, stop and ask.
+   - Project: clone the source into a temporary folder outside the project, with enough history to include the manifest's `commit` (a full clone is simplest).
+   
+   This checkout is the source repository for steps 3 to 5. Run every git command in those steps there, never in the project.
+3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on `main`. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
+4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
+5. Get the target version.
+   - Personal: check out the target in the clone.
+   - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
+6. Carry out every **manual** action. Ask when an action needs a decision.
+7. Reconcile the wiring with the table in the target version's `INSTALL.md`:
    - create wiring that is missing;
    - replace wiring that changed (hard rule 5 applies);
    - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
    - in project mode, delete manifest-listed copied files that the target version no longer ships, such as a removed or renamed rule (hard rule 5 applies);
    - delete any directory in `directories` that this leaves empty.
-7. Rewrite the managed block and the manifest, then verify as in Install step 6.
-8. Report:
+8. Rewrite the managed block and the manifest, then verify as in Install step 6.
+9. Report:
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
    - the files you changed.
