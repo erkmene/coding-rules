@@ -13,7 +13,7 @@ Code is a step-by-step list of operations that ultimately serve a definite purpo
 
 ## Don't repeat yourself (DRY)
 
-- Extract a shared piece on the third occurrence, or at the second when the copies encode the same rule and must change together. Code that merely looks alike may stay duplicated (see "Abstraction discipline").
+- Extract a shared piece on the third occurrence, or at the second when the copies encode the same rule and must change together. Code that merely looks alike may stay duplicated (see "Abstraction discipline"). When the extraction would reach outside the task, see "Scope of work".
 - When shared code lives in a location that reflects only its original, narrower use, move it up to a level where all consumers can reference it naturally. Example: a utility in `queue/utils/map.ts` that `jobs/manager.ts` also needs moves to `utils/map.ts`, and both reference it there.
 
 ## Abstraction discipline — the counterweight to DRY
@@ -34,7 +34,8 @@ We are telling a story, but not writing art open to interpretation. Be clear, ex
 
 ## Small, modular units
 
-- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. When a unit exceeds the cap, split it: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces.
+- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. A unit over the cap is a signal to look for a split, not a target to reach.
+- Split along a seam where each part makes sense on its own: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces. If the only split available would make the parts pass layout or internals back and forth only to preserve the original structure, keep the unit whole and say why in the handoff.
 - One module = one concern. A file that needs "and" to describe what it does is usually two files.
 
 ## Function and API design
@@ -94,6 +95,7 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Dependencies
 
 - Prefer the standard library and existing project dependencies over adding a new package for something small.
+- In new code, don't use deprecated APIs, options or config keys. If the replacement needs work outside the task, use the deprecated one and note it in the handoff.
 
 ## Editing existing code
 
@@ -103,4 +105,5 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Scope of work
 
 - Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
+- When removing a duplicate would mean changing code outside the task (another app, a shared module, a file the task does not otherwise touch), keep the copy and comment it with the original's location. Add the matching comment to the original only when it is in the same repository and that comment is the only change there; otherwise, mention it in the follow-up that reports the extraction.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.

@@ -60,6 +60,7 @@ To remove the rules, ask the agent to uninstall them; it removes exactly what th
 | `rules/python.md` | Python | Python files |
 | `rules/new-project-python.md` | Python packaging and tooling choices | when setting up a Python project |
 | `rules/react.md` | React components and hooks | React files |
+| `rules/svelte.md` | Svelte 5 runes, state and snippets | Svelte files |
 | `rules/testing.md` | Testing in any language | test files |
 | `rules/testing-js.md` | JS/TS tests | JS/TS test files |
 | `rules/testing-python.md` | Python tests | Python test files |
@@ -123,5 +124,5 @@ To keep every line in an agent's context worth its cost, two kinds of rules were
 
 1. Edit or add the file in `rules/` (or `checklists/`): plain Markdown, no frontmatter, no tool-specific syntax.
 2. For a new rule or a scope change, update the scope table in `INSTALL.md`; nowhere else defines scope.
-3. Add an entry under `Unreleased` in `CHANGELOG.md`, with its **Action**.
-4. To release, rename `Unreleased` to the version, then tag and publish `vX.Y.Z`.
+3. In `CHANGELOG.md`, add the change under the version the branch will release, `## X.Y.Z (YYYY-MM-DD)`, with its **Action**. Pick the version by the rules at the top of the changelog. If the branch already has that heading, add to it, and raise the version if a later change needs a bigger bump.
+4. Before merging, set the heading's date to the merge date. After merging, tag the merge commit `vX.Y.Z` and publish a release whose notes are that changelog entry.

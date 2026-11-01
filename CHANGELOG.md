@@ -8,6 +8,27 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## 1.1.0 (2026-11-01)
+
+**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`. Claude Code installs that used fallback lines for the always rules link them from the tool's rules folder instead, and those fallback lines leave the managed block, except where `INSTALL.md` still calls for them (personal mode with Cowork, or checkouts without symlink support).
+
+### Added
+
+- `rules/svelte.md`: Svelte 5 runes, `$derived` over `$effect`, mutating `$state`, snippets versus components.
+
+### Changed
+
+- `rules/javascript.md`: the no-mutation rule covers inputs and shared data; state owned by a framework's reactivity system follows that framework's idiom.
+- `rules/universal.md`: the size caps are a signal; split only along a seam where each part stands alone.
+- `rules/universal.md`: a duplicate whose extraction falls outside the task stays, with a comment naming the original, and the extraction is reported as a follow-up.
+- `rules/typescript.md`: strictness options apply to code the project owns; code under another config is matched or isolated, and the gap noted.
+- `INSTALL.md`: an always rule can be wired as a symlink to the rule file (with Claude Code's details); the manifest records a symlink's target path instead of a hash; uninstall removes links, not targets.
+- `INSTALL.md`: never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`, since by default Claude Code then stops reading `AGENTS.md`.
+- `INSTALL.md`: the install and update reports tell the user to start a new session.
+- `checklists/review.md`: an area with no test setup is reported in the handoff; adding a test framework is the owner's decision.
+- `rules/universal.md`: new code avoids deprecated APIs and options unless the replacement needs out-of-scope work, which the handoff notes.
+- `docs/tooling.md`: a minimum release age for new dependency versions.
+
 ## 1.0.0 (2026-10-30)
 
 **Action: none.** This is the first release; install it by following `INSTALL.md`.

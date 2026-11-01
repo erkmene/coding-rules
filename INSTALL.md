@@ -11,12 +11,12 @@ Read this whole file before acting, then follow the section that matches the req
 - **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on `main`.
 - **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
-- **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root.
+- **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. By default, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file, and one in a subdirectory stops that subdirectory's `AGENTS.md`. So never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
 - **Manifest**: `manifest.json` in the rules folder. It records what was installed.
 
 ## Hard rules
 
-1. A wiring file contains activation metadata and a reference to its rule file, nothing else. Never copy, summarise or paraphrase rule text into a wiring file or an instructions file. Copies drift from the source, and preventing that drift is the point of this repository.
+1. A wiring file contains activation metadata and a reference to its rule file, nothing else; a symlink to the rule file counts as a reference. Never copy, summarise or paraphrase rule text into a wiring file or an instructions file. Copies drift from the source, and preventing that drift is the point of this repository.
 2. Name every wiring file `coding-rules-<rule>`, using the extension your tool expects, e.g. `coding-rules-git.md`. When your tool needs one folder per item, name the folder that way.
 3. Create, change or delete only:
    - the rules folder;
@@ -26,7 +26,7 @@ Read this whole file before acting, then follow the section that matches the req
    
    If anything else is in the way, stop and ask the user.
 4. Use only mechanisms your tool documents. If you are not sure your tool supports a mechanism, check its documentation. If you still cannot confirm it, use the fallback for that class. Never guess at a configuration format.
-5. Before you replace or delete a file whose hash differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do.
+5. Before you replace or delete a file whose hash (for a symlink, whose target) differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do.
 
 ## The rules and when they load
 
@@ -41,11 +41,12 @@ This table is the only place where rule scope is defined.
 | `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
 | `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{repositories,db}/**` |
 | `rules/i18n.md` | opt-in, activity + paths | only if the user opts in; then when writing or changing user-facing text or translations, and for files matching `**/{locales,i18n,messages}/**` |
-| `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}` |
-| `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}` |
+| `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/*.svelte` |
+| `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/python.md` | paths | `**/*.py` |
 | `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging, dependency or tooling setup |
 | `rules/react.md` | paths | `**/*.{jsx,tsx}`, `**/use[A-Z]*.{ts,js}`, `**/hooks/**/*.{ts,js}` |
+| `rules/svelte.md` | paths | `**/*.svelte`, `**/*.svelte.{ts,js}` |
 | `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching any of `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**`, `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `rules/testing-js.md` | paths | `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**` |
 | `rules/testing-python.md` | paths | `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
@@ -55,7 +56,11 @@ Keep the `testing.md` globs equal to the union of the `testing-js.md` and `testi
 
 How to wire each class:
 
-- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file. Otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task."
+- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file; otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task." A symlink to the rule file is a reference, not a copy, where your tool documents following symlinks. In Claude Code, a rule without `paths` in a rules folder loads at the start of every session:
+  - project mode: link `.claude/rules/coding-rules-<rule>.md` to the rule file with a relative path, so the target stays inside the working directory. A link whose target is outside the session's working directory loads only after the user approves external imports.
+  - personal mode: link `~/.claude/rules/coding-rules-<rule>.md` to the rule file in the clone. User-level links load without approval, except in Cowork sessions on the desktop, which skip a symlinked user rule that points outside the working directory. If the user works in Cowork, also add the fallback line.
+
+  Where links don't survive a checkout (Git on Windows with `core.symlinks=false` writes them as plain files), use the fallback line.
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
 - **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
@@ -99,7 +104,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
-  - wiring files;
+  - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - in project mode, each copied file: rules, checklists, `INSTALL.md` and `CHANGELOG.md`.
 
@@ -118,7 +123,7 @@ If the instructions file does not exist, create it with only the block. If it al
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.**
 6. **Verify:**
-   - every wiring file contains only metadata and a reference;
+   - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear;
    - in project mode, `git check-ignore` reports none of the rules folder, the wiring files or the instructions file as ignored.
@@ -126,6 +131,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - the mode and the version;
    - the files you created, replaced or skipped;
    - which rules use a fallback line;
+   - that the user should start a new session before relying on the rules: always rules load only when a session starts, and some tools, Claude Code among them, don't see agent or skill folders created during a session;
    - anything that needs the user's attention.
    
    In project mode, remind the user to commit the changes.
@@ -139,13 +145,13 @@ If the instructions file does not exist, create it with only the block. If it al
    
    This checkout is the source repository for steps 3 to 5. Run every git command in those steps there, never in the project.
 3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on the fetched remote branch (`origin/main`), not a local `main` branch, which a fetch does not move. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
-4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
+4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`).
 5. Get the target version.
    - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
 6. Carry out every **manual** action. Ask when an action needs a decision.
 7. Reconcile the wiring with the table in the target version's `INSTALL.md`:
-   - create wiring that is missing;
+   - create wiring that is missing, including wiring for a rule that used a fallback line and that your tool can now wire natively;
    - replace wiring that changed (hard rule 5 applies);
    - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
    - in project mode, delete manifest-listed copied files that the target version no longer ships, such as a removed or renamed rule (hard rule 5 applies);
@@ -154,13 +160,14 @@ If the instructions file does not exist, create it with only the block. If it al
 9. Report:
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
-   - the files you changed.
+   - the files you changed;
+   - that the user should start a new session, as in Install step 7, so the updated rules and wiring load.
    
    In project mode, remind the user to commit the changes.
 
 ## Uninstall
 
-1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). Then delete each directory in `directories` that is now empty, in the order listed.
+1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
 3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
 4. Report what was removed. In project mode, remind the user to commit the changes.
