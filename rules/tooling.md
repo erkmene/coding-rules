@@ -1,0 +1,12 @@
+# Project Tooling
+
+Apply when adding or changing a project's linter, formatter, type checker or test runner, including when creating a project. An existing project's choices win.
+
+- Adding a tool is the owner's decision. Propose what is missing, one recommendation per kind of tool with the reason it fits this project, and add only what the user accepts.
+- Pick from "Choosing tools" in `docs/tooling.md`, and configure the settings that file lists that each tool you add covers on its own or with the plugins "Choosing tools" names. Propose the extra plugins the rest of the table needs separately. `docs/tooling.md` and `INSTALL.md` are in the coding-rules folder named in the instructions file.
+- Before proposing a formatter for existing code, measure the reformat it would cause (files and lines changed) and show it. The reformat goes in a commit of its own, after the commit that adds the configuration, and must reach the default branch as its own commit, not squashed. Once it lands, add its hash to `.git-blame-ignore-revs`, which GitHub reads on its own; local blame needs `git config blame.ignoreRevsFile .git-blame-ignore-revs`. Otherwise every later edit mixes formatting into a logic diff.
+- In a repository with several packages, keep the tools and scripts per package, and put the git hook manager at the repository root with a job per package.
+- Expose every tool through a project script (`format`, `lint`, `typecheck`, `test`) that also takes file paths where the tool allows, so hooks, CI and people run the same commands.
+- Once the tools work, wire the agent hooks that run them, following "Set up tooling" in `INSTALL.md`. Ask before adding hooks to the agent tool's settings file.
+- When the project replaces a tool that existing hooks call, update the hooks in the same change.
+- The setup is done when a hook has fired on a real edit, not when its configuration is written.

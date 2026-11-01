@@ -8,6 +8,30 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## 2.0.0 (2026-11-01)
+
+**Action: manual.** The installed `INSTALL.md` predates this release's Update steps. In Update step 6:
+1. In project mode, copy `docs/` into the rules folder as well, since the installed Install step 2 doesn't list it.
+2. Read the target version's `INSTALL.md` and continue with its Update section from step 7. It re-wires (the scope table gained `rules/tooling.md`, and `rules/new-project-python.md` no longer covers tooling), fills in the new manifest fields in step 8, and runs Check in step 9. When filling in `declined`, record `"i18n": "declined before 2.0.0; at the 2.0.0 update: <the files matching its globs, or none>"` if i18n isn't in `optIn`, and in personal mode, when the update runs in a project, the same value as `i18n:<project root>`. Between Check and the report, when working in a project, offer Set up tooling; the user may decline.
+
+### Added
+
+- `rules/tooling.md`: propose missing linters, formatters, type checkers and test runners for the owner to accept, run them through project scripts, and wire agent hooks that run them. A formatter adopted in existing code reformats in a commit of its own, listed in `.git-blame-ignore-revs`; repositories with several packages keep tools per package; plugins beyond the chosen tools are proposed separately.
+- `INSTALL.md`: a Set up tooling section. It proposes tools, wires an after-edit hook that formats and lints the edited file and hands remaining errors back to the agent, an optional finish hook for types and tests, and a git pre-commit hook. Install offers it; it can also be run alone.
+- `INSTALL.md`: a Check section, run by every Update and on request, that catches install decisions later changes made wrong: a `CLAUDE.md` shadowing `AGENTS.md`, unwired agent tools, a declined i18n the project now needs, links in checkouts without symlink support, Cowork, and stale hooks. A table lists every install decision and what catches it.
+- `INSTALL.md`: manifest fields `declined`, `tools`, `alwaysWiring`, `cowork` and `hooks`. `declined` records the questions the user said no to, so Check asks again only when something new turns up, and a later yes clears the key. Check keeps asking about Cowork until the user says yes or asks it to stop, since nothing in a project shows it. Install asks about Cowork instead of assuming.
+- `docs/tooling.md`: a Choosing tools section with the default tools per stack, including notes on typescript-eslint's strict presets in Svelte. Coverage thresholds wait until the suite covers the main modules.
+
+### Changed
+
+- `INSTALL.md`: hard rule 3 allows creating a settings file, hook entries in settings files and lines in the repository's exclude file (found with `git rev-parse --git-path`, so worktrees and submodules work), all tracked in the manifest, and the project files the user agreed to during Set up tooling, which belong to the project. Hard rule 5 covers edited hook entries. In project mode, the ignore check covers hook scripts and settings files.
+- `INSTALL.md`: project mode copies `docs/` too, since `rules/tooling.md` refers to it.
+- `INSTALL.md`: Update follows the target version's procedure from step 6 on, fills in manifest fields the installed version lacked, and runs Check. Uninstall removes hook entries before deleting files, deletes a settings file it created only once every entry in it is handled and nothing else is left, and leaves the project's tools. Tooling fallback lines are recorded in `hooks`, so rewriting the managed block keeps them, and in personal mode they name their project.
+- `INSTALL.md`: Update runs Check even when the install is already up to date.
+- `INSTALL.md`: Set up tooling shows a formatter's reformat size before the user accepts it, routes the after-edit hook to each package's scripts in a repository with several packages, verifies each agent hook against what it runs (format and lint after edits, types and tests at the finish), and verifies the git pre-commit hook by running it through its manager on a staged lint error in each package, never by committing. Hook entries record their `event`. An install can track a branch other than `main`, to try changes before their release; when that branch is gone or released, Update offers to switch to the release. Check also looks for a shadowing `CLAUDE.md` from the working directory up, and only reports one outside the project root or in personal mode. It offers fallback lines again when symlink support changes. Uninstall never deletes an instructions file recorded with `null`, and removes exclude lines only after deciding which files stay.
+- `INSTALL.md`: when a `CLAUDE.md` shadows the block, Check offers to add the block to it, recorded so Uninstall removes only the block, instead of an import that Uninstall couldn't track. Uninstall keeps exclude lines for the files it keeps.
+- `rules/new-project-python.md`: tooling moved to `rules/tooling.md`; the Ruff starting selection moved to `docs/tooling.md`.
+
 ## 1.2.0 (2026-11-01)
 
 **Action: none.** Clarifications from the first update to 1.1.0.
