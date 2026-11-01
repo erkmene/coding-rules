@@ -145,7 +145,7 @@ If the instructions file does not exist, create it with only the block. If it al
    
    This checkout is the source repository for steps 3 to 5. Run every git command in those steps there, never in the project.
 3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on the fetched remote branch (`origin/main`), not a local `main` branch, which a fetch does not move. Compare the manifest's `commit` with the target's commit; if they are the same, say so and stop.
-4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`), including lines under `Unreleased`.
+4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`).
 5. Get the target version.
    - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
