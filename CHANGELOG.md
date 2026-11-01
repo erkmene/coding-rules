@@ -25,6 +25,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 - `INSTALL.md`: an always rule can be wired as a symlink to the rule file (with Claude Code's details); the manifest records a symlink's target path instead of a hash; uninstall removes links, not targets.
 - `INSTALL.md`: never create a `CLAUDE.md` in a project that has an `AGENTS.md`, since Claude Code then stops reading `AGENTS.md`.
 - `INSTALL.md`: the install and update reports tell the user to start a new session.
+- `checklists/review.md`: an area with no test setup is reported in the handoff; adding a test framework is the owner's decision.
 
 ## 1.0.0 (2026-10-30)
 
