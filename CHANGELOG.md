@@ -19,7 +19,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 - `rules/tooling.md`: propose missing linters, formatters, type checkers and test runners for the owner to accept, run them through project scripts, and wire agent hooks that run them.
 - `INSTALL.md`: a Set up tooling section. It proposes tools, wires an after-edit hook that formats and lints the edited file and hands remaining errors back to the agent, an optional finish hook for types and tests, and a git pre-commit hook. Install offers it; it can also be run alone.
 - `INSTALL.md`: a Check section, run by every Update and on request, that catches install decisions later changes made wrong: a `CLAUDE.md` shadowing `AGENTS.md`, unwired agent tools, a declined i18n the project now needs, links in checkouts without symlink support, Cowork, and stale hooks. A table lists every install decision and what catches it.
-- `INSTALL.md`: manifest fields `declined`, `tools`, `alwaysWiring`, `cowork` and `hooks`. `declined` records every question the user said no to, so Check asks again only when something new turns up. Install asks about Cowork instead of assuming.
+- `INSTALL.md`: manifest fields `declined`, `tools`, `alwaysWiring`, `cowork` and `hooks`. `declined` records the questions the user said no to, so Check asks again only when something new turns up, and a later yes clears the key. Check keeps asking about Cowork until the user says yes or asks it to stop, since nothing in a project shows it. Install asks about Cowork instead of assuming.
 - `docs/tooling.md`: a Choosing tools section with the default tools per stack.
 
 ### Changed

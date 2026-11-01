@@ -109,10 +109,11 @@ If the instructions file does not exist, create it with only the block. If it al
 - `declined`: what the user said no to, so Check doesn't ask again: an object with one key per question, and as its value what you knew when they said no. Keys:
   - an opt-in rule (`i18n`), and in personal mode `i18n:<project root>` for a no given in one project;
   - `tool:<name>` for a tool they chose not to wire;
-  - `cowork`, `fallback-lines` and `shadow:<path>` for the offers they turned down;
+  - `fallback-lines` and `shadow:<path>` for the offers they turned down;
+  - `cowork`, only when the user asks not to be asked about Cowork again;
   - `hooks:<project root>` for agent hooks they turned down in that project.
 
-  For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`.
+  For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`. When the user later says yes, or asks for the thing themselves, remove the key.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
 - `alwaysWiring`: an object mapping each tool in `tools` to how its **always** rules are wired: `link` (a symlink to the rule file), `reference` (the tool includes the file by reference) or `fallback` (a line in the managed block).
 - `cowork`: in personal mode, whether the user said they work in Cowork; `null` in project mode.
@@ -147,7 +148,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
-5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, a no to i18n (with the files matching its globs at the time, or none), and a no to Cowork.
+5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, and a no to i18n with the files matching its globs at the time, or none. In personal mode, when you are working in a project, record that no as `i18n:<project root>` as well.
 6. **Verify:**
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
@@ -238,7 +239,7 @@ Install makes decisions from the project and the user's setup as they are that d
    - Personal mode: look only in the project you are working in, if any. Ask when it has such files and `declined` has no `i18n:<project root>`, and say that a yes wires the rule for every project. If the user says no, record `i18n:<project root>`.
 5. **Always wiring.**
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules and `declined` has no `fallback-lines`, tell the user and offer to add them.
-   - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, and if so, add the fallback lines.
+   - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, since nothing in the project shows it. If so, set `cowork` to `true` and add the fallback lines; if they ask not to be asked again, record `cowork`.
 6. **Hooks.** For each entry in `hooks`: it is still in its settings file and still matches the manifest (hard rule 5); its script exists and matches its hash; and the project scripts it calls still exist and still run the project's current tools. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
 7. **Record** what changed in the manifest, including each offer the user turned down in `declined`, and **report** what you found and what you changed.
 
