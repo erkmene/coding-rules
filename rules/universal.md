@@ -105,5 +105,5 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Scope of work
 
 - Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
-- When removing a duplicate would mean changing code outside the task (another app, a shared module, a file the task does not otherwise touch), keep the copy and comment it with the original's location. Add the matching comment to the original only when it is in the same repository and that comment is the only change there; otherwise, include it in the follow-up. Report the extraction as a follow-up.
+- When removing a duplicate would mean changing code outside the task (another app, a shared module, a file the task does not otherwise touch), keep the copy and comment it with the original's location. Add the matching comment to the original only when it is in the same repository and that comment is the only change there; otherwise, mention it in the follow-up that reports the extraction.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.

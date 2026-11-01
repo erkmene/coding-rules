@@ -58,7 +58,7 @@ How to wire each class:
 
 - **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file; otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task." A symlink to the rule file is a reference, not a copy, where your tool documents following symlinks. In Claude Code, a rule without `paths` in a rules folder loads at the start of every session:
   - project mode: link `.claude/rules/coding-rules-<rule>.md` to the rule file with a relative path, so the target stays inside the working directory. A link whose target is outside the session's working directory loads only after the user approves external imports.
-  - personal mode: link `~/.claude/rules/coding-rules-<rule>.md` to the rule file in the clone. User-level links load without approval, except in Cowork sessions on the desktop, which skip a symlinked user rule that points outside the working directory.
+  - personal mode: link `~/.claude/rules/coding-rules-<rule>.md` to the rule file in the clone. User-level links load without approval, except in Cowork sessions on the desktop, which skip a symlinked user rule that points outside the working directory. If the user works in Cowork, also add the fallback line.
 
   Where links don't survive a checkout (Git on Windows with `core.symlinks=false` writes them as plain files), use the fallback line.
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
