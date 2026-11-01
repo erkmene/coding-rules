@@ -8,6 +8,18 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## Unreleased
+
+**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`.
+
+### Added
+
+- `rules/svelte.md`: Svelte 5 runes, `$derived` over `$effect`, mutating `$state`, snippets versus components.
+
+### Changed
+
+- `rules/javascript.md`: the no-mutation rule covers inputs and shared data; state owned by a framework's reactivity system follows that framework's idiom.
+
 ## 1.0.0 (2026-10-30)
 
 **Action: none.** This is the first release; install it by following `INSTALL.md`.

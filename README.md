@@ -60,6 +60,7 @@ To remove the rules, ask the agent to uninstall them; it removes exactly what th
 | `rules/python.md` | Python | Python files |
 | `rules/new-project-python.md` | Python packaging and tooling choices | when setting up a Python project |
 | `rules/react.md` | React components and hooks | React files |
+| `rules/svelte.md` | Svelte 5 runes, state and snippets | Svelte files |
 | `rules/testing.md` | Testing in any language | test files |
 | `rules/testing-js.md` | JS/TS tests | JS/TS test files |
 | `rules/testing-python.md` | Python tests | Python test files |

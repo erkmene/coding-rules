@@ -7,7 +7,7 @@ Apply to all JavaScript code and, together with the TypeScript guidelines, to Ty
 - Prefer functional programming over object-oriented programming: small pure functions composed together.
   - OOP is acceptable when it is truly the right fit — rare and well-justified, such as managing the state of well-defined entities (a queue system with `Job`, `Task`, `Worker`).
 - Prefer composition over inheritance. Inheritance is powerful but should be used sparingly and only when truly necessary; a class hierarchy more than one level deep is a design smell.
-- Produce new arrays/objects (spread, `map`, `filter`, `toSorted`) instead of mutating inputs.
+- Produce new arrays/objects (spread, `map`, `filter`, `toSorted`) instead of mutating inputs or shared data. State owned by a framework's reactivity system (Svelte's `$state`, Vue's `reactive`) follows that framework's idiom, which may be in-place mutation.
 
 ## Asynchrony
 

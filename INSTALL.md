@@ -41,11 +41,12 @@ This table is the only place where rule scope is defined.
 | `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
 | `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{repositories,db}/**` |
 | `rules/i18n.md` | opt-in, activity + paths | only if the user opts in; then when writing or changing user-facing text or translations, and for files matching `**/{locales,i18n,messages}/**` |
-| `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}` |
-| `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}` |
+| `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/*.svelte` |
+| `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/python.md` | paths | `**/*.py` |
 | `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging, dependency or tooling setup |
 | `rules/react.md` | paths | `**/*.{jsx,tsx}`, `**/use[A-Z]*.{ts,js}`, `**/hooks/**/*.{ts,js}` |
+| `rules/svelte.md` | paths | `**/*.svelte`, `**/*.svelte.{ts,js}` |
 | `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching any of `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**`, `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
 | `rules/testing-js.md` | paths | `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**` |
 | `rules/testing-python.md` | paths | `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
