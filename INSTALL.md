@@ -16,7 +16,7 @@ Read this whole file before acting, then follow the section that matches the req
 
 ## Hard rules
 
-1. A wiring file contains activation metadata and a reference to its rule file, nothing else. Never copy, summarise or paraphrase rule text into a wiring file or an instructions file. Copies drift from the source, and preventing that drift is the point of this repository.
+1. A wiring file contains activation metadata and a reference to its rule file, nothing else; a symlink to the rule file counts as a reference. Never copy, summarise or paraphrase rule text into a wiring file or an instructions file. Copies drift from the source, and preventing that drift is the point of this repository.
 2. Name every wiring file `coding-rules-<rule>`, using the extension your tool expects, e.g. `coding-rules-git.md`. When your tool needs one folder per item, name the folder that way.
 3. Create, change or delete only:
    - the rules folder;
@@ -56,7 +56,11 @@ Keep the `testing.md` globs equal to the union of the `testing-js.md` and `testi
 
 How to wire each class:
 
-- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file; otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task." A symlink to the rule file is a reference, not a copy, where your tool documents following symlinks. In Claude Code, link `.claude/rules/coding-rules-<rule>.md` to the rule file: rules without `paths` load at the start of every session. In project mode, make the link relative. Claude Code treats a link whose target is outside the session's working directory as an external import, which loads only after the user approves it. Where links don't survive a checkout (Git on Windows with `core.symlinks=false` writes them as plain files), use the fallback line.
+- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file; otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task." A symlink to the rule file is a reference, not a copy, where your tool documents following symlinks. In Claude Code, a rule without `paths` in a rules folder loads at the start of every session:
+  - project mode: link `.claude/rules/coding-rules-<rule>.md` to the rule file with a relative path, so the target stays inside the working directory. A link whose target is outside the session's working directory loads only after the user approves external imports.
+  - personal mode: link `~/.claude/rules/coding-rules-<rule>.md` to the rule file in the clone. User-level links load without approval, except in Cowork sessions on the desktop, which skip a symlinked user rule that points outside the working directory.
+
+  Where links don't survive a checkout (Git on Windows with `core.symlinks=false` writes them as plain files), use the fallback line.
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
 - **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
@@ -100,7 +104,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
-  - wiring files. For a symlink, record its target path as `readlink` prints it instead of a hash;
+  - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - in project mode, each copied file: rules, checklists, `INSTALL.md` and `CHANGELOG.md`.
 
@@ -119,7 +123,7 @@ If the instructions file does not exist, create it with only the block. If it al
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.**
 6. **Verify:**
-   - every wiring file contains only metadata and a reference;
+   - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear;
    - in project mode, `git check-ignore` reports none of the rules folder, the wiring files or the instructions file as ignored.
@@ -147,7 +151,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
 6. Carry out every **manual** action. Ask when an action needs a decision.
 7. Reconcile the wiring with the table in the target version's `INSTALL.md`:
-   - create wiring that is missing;
+   - create wiring that is missing, including wiring for a rule that used a fallback line and that your tool can now wire natively;
    - replace wiring that changed (hard rule 5 applies);
    - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
    - in project mode, delete manifest-listed copied files that the target version no longer ships, such as a removed or renamed rule (hard rule 5 applies);
