@@ -26,7 +26,8 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 - `INSTALL.md`: hard rule 3 allows creating a settings file, hook entries in settings files and `.git/info/exclude` lines, all tracked in the manifest, and the project files the user agreed to during Set up tooling, which belong to the project. Hard rule 5 covers edited hook entries. In project mode, the ignore check covers hook scripts and settings files.
 - `INSTALL.md`: project mode copies `docs/` too, since `rules/tooling.md` refers to it.
-- `INSTALL.md`: Update follows the target version's procedure from step 6 on, fills in manifest fields the installed version lacked, and runs Check. Uninstall removes hook entries before deleting files, deletes a settings file it created once nothing else is in it, and leaves the project's tools.
+- `INSTALL.md`: Update follows the target version's procedure from step 6 on, fills in manifest fields the installed version lacked, and runs Check. Uninstall removes hook entries before deleting files, deletes a settings file it created only once every entry in it is handled and nothing else is left, and leaves the project's tools. Tooling fallback lines are recorded in `hooks`, so rewriting the managed block keeps them, and in personal mode they name their project.
+- `INSTALL.md`: Update runs Check even when the install is already up to date.
 - `rules/new-project-python.md`: tooling moved to `rules/tooling.md`; the Ruff starting selection moved to `docs/tooling.md`.
 
 ## 1.2.0 (2026-11-01)
