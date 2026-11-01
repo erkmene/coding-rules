@@ -106,7 +106,13 @@ If the instructions file does not exist, create it with only the block. If it al
 - `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
-- `declined`: what the user said no to, so Check doesn't ask again: an object with one key per question, and as its value what you knew when they said no. Keys: an opt-in rule (`i18n`), `tool:<name>` for a tool they chose not to wire, and `cowork`, `fallback-lines`, `shadow:<path>` and `hooks` for the Check offers they turned down. For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`.
+- `declined`: what the user said no to, so Check doesn't ask again: an object with one key per question, and as its value what you knew when they said no. Keys:
+  - an opt-in rule (`i18n`), and in personal mode `i18n:<project root>` for a no given in one project;
+  - `tool:<name>` for a tool they chose not to wire;
+  - `cowork`, `fallback-lines` and `shadow:<path>` for the offers they turned down;
+  - `hooks:<project root>` for agent hooks they turned down in that project.
+
+  For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
 - `alwaysWiring`: an object mapping each tool in `tools` to how its **always** rules are wired: `link` (a symlink to the rule file), `reference` (the tool includes the file by reference) or `fallback` (a line in the managed block).
 - `cowork`: in personal mode, whether the user said they work in Cowork; `null` in project mode.
@@ -141,7 +147,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
-5. **Write the manifest.**
+5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, a no to i18n (with the files matching its globs at the time, or none), and a no to Cowork.
 6. **Verify:**
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
@@ -168,7 +174,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
    - the agent hooks below, naming the settings file each one goes in;
    - a git pre-commit hook, if the project has none.
 
-   Add only what the user accepts. Record what they turn down in `declined`.
+   Skip the agent hooks when `declined` has `hooks:<project root>`, unless the user asked for this setup. Add only what the user accepts. If they turn down the agent hooks, record `hooks:<project root>`.
 3. **Add the tools** the user accepted: dev dependencies, configuration, and the project scripts `rules/tooling.md` asks for. Run each script once to see that it works.
 4. **Wire the agent hooks** for each tool in the manifest's `tools` that documents hooks (hard rule 4):
    - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on.
@@ -227,7 +233,9 @@ Install makes decisions from the project and the user's setup as they are that d
 1. **Verify** as in Install step 6.
 2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer a fix: an `@AGENTS.md` import in that `CLAUDE.md`, or the managed block in it as well. The file is theirs, so change it only with their agreement. If they decline, record `shadow:<path>`.
 3. **New tools.** Detect agent tools as in Install step 1. For each one in neither `tools` nor `declined`, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
-4. **Declined opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it that weren't there when the user said no, and ask again only if you find one. For i18n, that is a file matching its globs. In personal mode, look only in the project you are working in, if any, and say that a yes wires the rule for every project. Update the `declined` value with what you found.
+4. **Declined opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it, and ask again only if they weren't there when the user said no. For i18n, the signs are files matching its globs.
+   - Project mode: compare with the `declined` value, and update it with what you found.
+   - Personal mode: look only in the project you are working in, if any. Ask when it has such files and `declined` has no `i18n:<project root>`, and say that a yes wires the rule for every project. If the user says no, record `i18n:<project root>`.
 5. **Always wiring.**
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules and `declined` has no `fallback-lines`, tell the user and offer to add them.
    - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, and if so, add the fallback lines.
