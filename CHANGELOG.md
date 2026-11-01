@@ -2,7 +2,7 @@
 
 Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that tells an updating agent what the update needs:
 
-- **none**: rule text only. Updating the files is enough.
+- **none**: no wiring changes or manual steps. Updating the files is enough.
 - **re-wire**: the scope table in `INSTALL.md` changed. The Update procedure handles it.
 - **manual**: a step the agent must take or ask about, described in the entry.
 
@@ -16,9 +16,10 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 - `INSTALL.md`: `installedAt` is the date of the last install or update.
 - `INSTALL.md`: in Claude Code, the verify step checks the always rules with `claude -p "/context"`.
-- `INSTALL.md`: Update step 7 leaves wiring that already matches the target table as it is, even when the manifest's version predates it.
-- `INSTALL.md`: the update report notes that changed rules may make existing code non-compliant, as follow-ups rather than part of the update.
+- `INSTALL.md`: Update step 7 leaves wiring that already matches the target table as it is, even when the manifest's version predates it, and adds it to the manifest if it isn't listed.
+- `INSTALL.md`: when an update changes rule files, the report notes that changed rules may make existing code non-compliant, as follow-ups rather than part of the update.
 - `CHANGELOG.md`: the 1.1.0 entry for duplicates now also mentions the comment on the original, as `rules/universal.md` says.
+- `CHANGELOG.md`: the **none** Action means no wiring changes or manual steps, not only rule text changes.
 
 ## 1.1.0 (2026-11-01)
 
