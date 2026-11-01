@@ -86,6 +86,7 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
 - **Shared branches:** protect them against force-pushes and history rewrites.
 - **Lockfiles:** install in CI with `npm ci`, `pnpm install --frozen-lockfile` or `uv sync --locked`, so a missing or stale lockfile fails the build.
 - **Vulnerabilities:** Dependabot or Renovate, plus `npm audit` or `pip-audit` in CI; triage new advisories.
+- **Release age:** hold back dependency versions published in the last few days, so a broken or compromised release is caught first: pnpm `minimumReleaseAge`, Renovate `minimumReleaseAge`.
 - **Migrations:**
   - fail CI when a migration file that already exists on the main branch is modified;
   - lint migrations for destructive or locking operations (squawk for Postgres, or your framework's equivalent).
