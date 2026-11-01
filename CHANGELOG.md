@@ -19,6 +19,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 ### Changed
 
 - `rules/javascript.md`: the no-mutation rule covers inputs and shared data; state owned by a framework's reactivity system follows that framework's idiom.
+- `rules/universal.md`: the size caps are a signal; split only along a seam where each part stands alone.
 
 ## 1.0.0 (2026-10-30)
 

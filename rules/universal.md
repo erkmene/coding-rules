@@ -34,7 +34,8 @@ We are telling a story, but not writing art open to interpretation. Be clear, ex
 
 ## Small, modular units
 
-- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. When a unit exceeds the cap, split it: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces.
+- Keep functions and files small enough to read in one sitting. Soft caps: ~50 lines per function, ~300 lines per file. A unit over the cap is a signal to look for a split, not a target to reach.
+- Split along a seam where each part makes sense on its own: extract helpers, lift sub-parts into their own files, break orchestrators into smaller composed pieces. If the only split available would make the parts pass layout or internals back and forth (a child component that takes markup from its parent only to keep the parent's DOM order), keep the unit whole and say why in the handoff.
 - One module = one concern. A file that needs "and" to describe what it does is usually two files.
 
 ## Function and API design
