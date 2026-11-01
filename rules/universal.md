@@ -13,7 +13,7 @@ Code is a step-by-step list of operations that ultimately serve a definite purpo
 
 ## Don't repeat yourself (DRY)
 
-- Extract a shared piece on the third occurrence, or at the second when the copies encode the same rule and must change together. Code that merely looks alike may stay duplicated (see "Abstraction discipline").
+- Extract a shared piece on the third occurrence, or at the second when the copies encode the same rule and must change together. Code that merely looks alike may stay duplicated (see "Abstraction discipline"). When the extraction would reach outside the task, see "Scope of work".
 - When shared code lives in a location that reflects only its original, narrower use, move it up to a level where all consumers can reference it naturally. Example: a utility in `queue/utils/map.ts` that `jobs/manager.ts` also needs moves to `utils/map.ts`, and both reference it there.
 
 ## Abstraction discipline — the counterweight to DRY
@@ -104,4 +104,5 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Scope of work
 
 - Implement exactly what was asked. No drive-by features, refactors, or "improvements" outside the task's scope — propose them separately instead.
+- When removing a duplicate would mean changing code outside the task (another app, a shared module, a file the task does not otherwise touch), keep the copy. Add a comment to each copy naming the other, and report the extraction as a follow-up.
 - When a task reveals a genuine problem outside its scope (a bug, a broken invariant), report it; do not silently fix or silently ignore it.

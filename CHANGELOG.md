@@ -20,6 +20,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 - `rules/javascript.md`: the no-mutation rule covers inputs and shared data; state owned by a framework's reactivity system follows that framework's idiom.
 - `rules/universal.md`: the size caps are a signal; split only along a seam where each part stands alone.
+- `rules/universal.md`: a duplicate whose extraction falls outside the task stays, cross-referenced, and the extraction is reported as a follow-up.
 
 ## 1.0.0 (2026-10-30)
 
