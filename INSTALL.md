@@ -23,7 +23,7 @@ Read this whole file before acting, then follow the section that matches the req
    - the rules folder;
    - `coding-rules-*` files and folders that the manifest lists or that you are creating now;
    - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
-   - an instructions file that does not exist yet, and the parent directories that wiring needs. Record both in the manifest;
+   - an instructions file or settings file that does not exist yet, and the parent directories that wiring or hook scripts need. Record them in the manifest;
    - hook entries you add to a settings file, and lines you add to `.git/info/exclude`, all recorded in the manifest's `hooks`;
    - during [Set up tooling](#set-up-tooling), the project files the user agreed to add or change. They belong to the project from then on: don't list them in the manifest, and Uninstall leaves them.
    
@@ -106,7 +106,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
-- `declined`: the opt-in rules the user said no to, e.g. `["i18n"]`.
+- `declined`: what the user said no to, so Check doesn't ask again: an object with one key per question, and as its value what you knew when they said no. Keys: an opt-in rule (`i18n`), `tool:<name>` for a tool they chose not to wire, and `cowork`, `fallback-lines`, `shadow:<path>` and `hooks` for the Check offers they turned down. For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
 - `alwaysWiring`: an object mapping each tool in `tools` to how its **always** rules are wired: `link` (a symlink to the rule file), `reference` (the tool includes the file by reference) or `fallback` (a line in the managed block).
 - `cowork`: in personal mode, whether the user said they work in Cowork; `null` in project mode.
@@ -115,7 +115,8 @@ If the instructions file does not exist, create it with only the block. If it al
   - `tool`: the tool, as named in `tools`;
   - `settingsFile`: the settings file the entry is in;
   - `entry`: the entry exactly as you wrote it;
-  - `exclude`: the lines you added to `.git/info/exclude` for it (empty if none).
+  - `exclude`: the lines you added to `.git/info/exclude` for it (empty if none);
+  - `createdSettingsFile`: `true` if you created the settings file for this entry.
 
   Hook scripts go in `files` with their hashes.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
@@ -145,7 +146,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear. In Claude Code, run `claude -p "/context"` in the project directory, which starts a fresh session, and look for them among the memory files it lists;
-   - in project mode, `git check-ignore` reports none of the rules folder, the wiring files or the instructions file as ignored.
+   - in project mode, `git check-ignore` reports none of the rules folder, the wiring files, the instructions file, the hook scripts or the settings files in `hooks` as ignored.
 7. **Set up tooling** if the user agreed, following [Set up tooling](#set-up-tooling).
 8. **Report:**
    - the mode and the version;
@@ -164,10 +165,10 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 1. **Look at what the project has:** its linter, formatter, type checker, test runner and git hooks, and the scripts that run them.
 2. **Propose**, in one message:
    - each missing kind of tool, with one recommendation from "Choosing tools" in `docs/tooling.md` and the reason it fits;
-   - the agent hooks below;
+   - the agent hooks below, naming the settings file each one goes in;
    - a git pre-commit hook, if the project has none.
 
-   Add only what the user accepts.
+   Add only what the user accepts. Record what they turn down in `declined`.
 3. **Add the tools** the user accepted: dev dependencies, configuration, and the project scripts `rules/tooling.md` asks for. Run each script once to see that it works.
 4. **Wire the agent hooks** for each tool in the manifest's `tools` that documents hooks (hard rule 4):
    - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on.
@@ -182,7 +183,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
    For a tool without documented hooks, add a fallback line to the managed block: "Unless your tool already runs it: after editing a file, run `<command>` on it and fix what it reports."
 5. **Add the git pre-commit hook** if the user accepted it, using the project's hook manager. Like the tools, it belongs to the project.
 6. **Verify:** run each hook script with the input its tool would send, on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error, then delete the file. If the tool loads hooks only when a session starts, tell the user that the hooks run from their next session.
-7. **Record** each hook entry in the manifest's `hooks`, and each script in `files`.
+7. **Record** each hook entry in the manifest's `hooks`, each script in `files`, and each directory you created in `directories`. Then verify the ignore rules as in Install step 6.
 8. **Report** the tools you added, the scripts and hooks you wired, any fallback lines, and the files the user should commit.
 
 ## Update
@@ -221,17 +222,17 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 
 ## Check
 
-Install makes decisions from the project and the user's setup as they are that day, and later changes can make them wrong. Check finds those cases. Update runs it every time, and the user can run it alone ("Check the coding rules"). Ask before changing anything.
+Install makes decisions from the project and the user's setup as they are that day, and later changes can make them wrong. Check finds those cases. Update runs it every time, and the user can run it alone ("Check the coding rules"). Ask before changing anything, and don't ask again about anything in `declined` unless what you knew then has changed.
 
 1. **Verify** as in Install step 6.
-2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it, or in a subdirectory of it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer a fix: an `@AGENTS.md` import in that `CLAUDE.md`, or the managed block in it as well. The file is theirs, so change it only with their agreement.
-3. **New tools.** Detect agent tools as in Install step 1. For each one not in `tools`, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
-4. **Declined opt-ins.** For each rule in `declined`, look for signs the project now needs it, and ask again if you find any. For i18n, that is a file matching its globs.
+2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer a fix: an `@AGENTS.md` import in that `CLAUDE.md`, or the managed block in it as well. The file is theirs, so change it only with their agreement. If they decline, record `shadow:<path>`.
+3. **New tools.** Detect agent tools as in Install step 1. For each one in neither `tools` nor `declined`, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
+4. **Declined opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it that weren't there when the user said no, and ask again only if you find one. For i18n, that is a file matching its globs. In personal mode, look only in the project you are working in, if any, and say that a yes wires the rule for every project. Update the `declined` value with what you found.
 5. **Always wiring.**
-   - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules, tell the user and offer to add them.
-   - Personal mode, when `cowork` is `false` and Claude Code is in `tools`: ask whether the user works in Cowork now, and if so, add the fallback lines.
+   - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules and `declined` has no `fallback-lines`, tell the user and offer to add them.
+   - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, and if so, add the fallback lines.
 6. **Hooks.** For each entry in `hooks`: it is still in its settings file and still matches the manifest (hard rule 5); its script exists and matches its hash; and the project scripts it calls still exist and still run the project's current tools. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
-7. **Record** what changed in the manifest, and **report** what you found and what you changed.
+7. **Record** what changed in the manifest, including each offer the user turned down in `declined`, and **report** what you found and what you changed.
 
 Every install decision, and what can make it wrong later:
 
@@ -244,13 +245,13 @@ Every install decision, and what can make it wrong later:
 | i18n | the project starts translating | Check step 4 |
 | Links or fallback lines | someone checks the project out without symlink support | Check step 5 |
 | Cowork | the user starts working in Cowork | Check step 5 |
-| Ignore rules | someone ignores the rules folder, wiring or instructions file | Check step 1 |
+| Ignore rules | someone ignores the rules folder, wiring, instructions file, hook scripts or settings file | Check step 1 |
 | Hooks | the project changes its tools or scripts, or someone edits the settings file | Check step 6 |
 
 ## Uninstall
 
-1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
-2. Remove the managed block from each instructions file.
-3. Remove each entry in `hooks` from its settings file, and its `exclude` lines from `.git/info/exclude` (hard rule 5 applies). Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
+1. Remove each entry in `hooks` from its settings file, and its `exclude` lines from `.git/info/exclude` (hard rule 5 applies). If you created the settings file and nothing else is left in it, delete it. If the user keeps an edited entry, keep the script it calls as well. Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
+2. Delete every file the manifest lists, except instructions files that existed before the install and scripts kept in step 1 (hard rule 5 applies). For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
+3. Remove the managed block from each instructions file.
 4. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
 5. Report what was removed. In project mode, remind the user to commit the changes.
