@@ -12,7 +12,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 **Action: manual.** The installed `INSTALL.md` predates this release's Update steps. In Update step 6:
 1. In project mode, copy `docs/` into the rules folder as well, since the installed Install step 2 doesn't list it.
-2. Read the target version's `INSTALL.md` and continue with its Update section from step 7. It re-wires (the scope table gained `rules/tooling.md`, and `rules/new-project-python.md` no longer covers tooling), fills in the new manifest fields in step 8, and runs Check in step 9. When filling in `declined`, record `"i18n": "declined before 2.0.0; at the 2.0.0 update: <the files matching its globs, or none>"` if i18n isn't in `optIn`. Between Check and the report, when working in a project, offer Set up tooling; the user may decline.
+2. Read the target version's `INSTALL.md` and continue with its Update section from step 7. It re-wires (the scope table gained `rules/tooling.md`, and `rules/new-project-python.md` no longer covers tooling), fills in the new manifest fields in step 8, and runs Check in step 9. When filling in `declined`, record `"i18n": "declined before 2.0.0; at the 2.0.0 update: <the files matching its globs, or none>"` if i18n isn't in `optIn`, and in personal mode, when the update runs in a project, the same value as `i18n:<project root>`. Between Check and the report, when working in a project, offer Set up tooling; the user may decline.
 
 ### Added
 

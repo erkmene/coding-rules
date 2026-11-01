@@ -115,7 +115,7 @@ If the instructions file does not exist, create it with only the block. If it al
   - `cowork`, only when the user asks not to be asked about Cowork again;
   - `hooks:<project root>` for agent hooks they turned down in that project.
 
-  For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`. When the user later says yes, or asks for the thing themselves, remove the key.
+  For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`. When the user later says yes, or asks for the thing themselves, remove the key; for an opt-in rule, remove every key for it.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
 - `alwaysWiring`: an object mapping each tool in `tools` to how its **always** rules are wired: `link` (a symlink to the rule file), `reference` (the tool includes the file by reference) or `fallback` (a line in the managed block).
 - `cowork`: in personal mode, whether the user said they work in Cowork; `null` in project mode.
@@ -246,7 +246,7 @@ Install makes decisions from the project and the user's setup as they are that d
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules and `declined` has no `fallback-lines`, tell the user and offer to add them.
    - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, since nothing in the project shows it. If so, set `cowork` to `true` and add the fallback lines; if they ask not to be asked again, record `cowork`.
 6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; and the project scripts it calls still exist and still run the project's current tools. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
-7. **Record** what changed in the manifest, including each offer the user turned down in `declined`, and **report** what you found and what you changed.
+7. **Record** what changed in the manifest, including each offer the user turned down in `declined` (Cowork only as step 5 says), and **report** what you found and what you changed.
 
 Every install decision, and what can make it wrong later:
 
