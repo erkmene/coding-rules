@@ -99,7 +99,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `source`: the repository URL.
 - `version`: the release tag, or `main`.
 - `commit`: the full commit hash that was installed.
-- `installedAt`: the date, as `YYYY-MM-DD`.
+- `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
@@ -125,7 +125,7 @@ If the instructions file does not exist, create it with only the block. If it al
 6. **Verify:**
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
-   - where your tool can list the rules or instructions it has loaded, the **always** rules appear;
+   - where your tool can list the rules or instructions it has loaded, the **always** rules appear. In Claude Code, run `claude -p "/context"` in the project directory, which starts a fresh session, and look for them among the memory files it lists;
    - in project mode, `git check-ignore` reports none of the rules folder, the wiring files or the instructions file as ignored.
 7. **Report:**
    - the mode and the version;
@@ -150,7 +150,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
 6. Carry out every **manual** action. Ask when an action needs a decision.
-7. Reconcile the wiring with the table in the target version's `INSTALL.md`:
+7. Reconcile the wiring with the table in the target version's `INSTALL.md`. Wiring that already matches the table stays as it is, even when the manifest's version predates it; if the manifest doesn't list it, add it in step 8:
    - create wiring that is missing, including wiring for a rule that used a fallback line and that your tool can now wire natively;
    - replace wiring that changed (hard rule 5 applies);
    - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
@@ -161,6 +161,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
    - the files you changed;
+   - when the update changes rule files, that changed rules may make existing code non-compliant. The rules apply to code as it is touched, so name any spot you noticed as a possible follow-up, and don't change it as part of the update;
    - that the user should start a new session, as in Install step 7, so the updated rules and wiring load.
    
    In project mode, remind the user to commit the changes.
