@@ -26,6 +26,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 - `INSTALL.md`: never create a `CLAUDE.md` in a project that has an `AGENTS.md`, since Claude Code then stops reading `AGENTS.md`.
 - `INSTALL.md`: the install and update reports tell the user to start a new session.
 - `checklists/review.md`: an area with no test setup is reported in the handoff; adding a test framework is the owner's decision.
+- `rules/universal.md`: new code avoids deprecated APIs and options unless the replacement needs out-of-scope work, which the handoff notes.
 
 ## 1.0.0 (2026-10-30)
 

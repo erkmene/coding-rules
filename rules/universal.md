@@ -95,6 +95,7 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Dependencies
 
 - Prefer the standard library and existing project dependencies over adding a new package for something small.
+- In new code, don't use deprecated APIs, options or config keys. If the replacement needs work outside the task, use the deprecated one and note it in the handoff.
 
 ## Editing existing code
 
