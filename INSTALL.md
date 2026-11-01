@@ -161,7 +161,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
    - the files you changed;
-   - if you created wiring, that the user should start a new session, as in Install step 7.
+   - that the user should start a new session, as in Install step 7, so the updated rules and wiring load.
    
    In project mode, remind the user to commit the changes.
 

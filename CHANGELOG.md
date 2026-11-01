@@ -10,7 +10,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 ## Unreleased
 
-**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`. Claude Code installs that used fallback lines for the always rules link them from `.claude/rules/` instead, and the fallback lines leave the managed block.
+**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`. Claude Code installs that used fallback lines for the always rules link them from the tool's rules folder instead, and those fallback lines leave the managed block, except where `INSTALL.md` still calls for them (personal mode with Cowork, or checkouts without symlink support).
 
 ### Added
 
