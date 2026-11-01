@@ -8,6 +8,35 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## 2.0.0 (2026-11-01)
+
+**Action: manual.** The installed `INSTALL.md` predates the steps this update needs, so:
+1. After getting the target version (Update step 5), read its `INSTALL.md` and follow its Update section from step 6 on.
+2. In project mode, copy `docs/` into the rules folder as well, and record its files in the manifest.
+3. Fill in the new manifest fields:
+   - `tools` and `alwaysWiring`, from the existing wiring;
+   - `declined`: `["i18n"]` if i18n isn't in `optIn`, unless the user wants to be asked again;
+   - `cowork`: ask, in personal mode when Claude Code is wired;
+   - `hooks`: an empty array.
+4. Re-wire: the scope table gained `rules/tooling.md`, and `rules/new-project-python.md` no longer covers tooling.
+5. Run Check.
+6. When working in a project, offer Set up tooling. The user may decline.
+
+### Added
+
+- `rules/tooling.md`: propose missing linters, formatters, type checkers and test runners for the owner to accept, run them through project scripts, and wire agent hooks that run them.
+- `INSTALL.md`: a Set up tooling section. It proposes tools, wires an after-edit hook that formats and lints the edited file and hands remaining errors back to the agent, an optional finish hook for types and tests, and a git pre-commit hook. Install offers it; it can also be run alone.
+- `INSTALL.md`: a Check section, run by every Update and on request, that catches install decisions later changes made wrong: a `CLAUDE.md` shadowing `AGENTS.md`, unwired agent tools, a declined i18n the project now needs, links in checkouts without symlink support, Cowork, and stale hooks. A table lists every install decision and what catches it.
+- `INSTALL.md`: manifest fields `declined`, `tools`, `alwaysWiring`, `cowork` and `hooks`. Install asks about Cowork instead of assuming.
+- `docs/tooling.md`: a Choosing tools section with the default tools per stack.
+
+### Changed
+
+- `INSTALL.md`: hard rule 3 allows hook entries in settings files and `.git/info/exclude` lines, both tracked in the manifest, and the project files the user agreed to during Set up tooling, which belong to the project. Hard rule 5 covers edited hook entries.
+- `INSTALL.md`: project mode copies `docs/` too, since `rules/tooling.md` refers to it.
+- `INSTALL.md`: Update follows the target version's procedure from step 6 on, fills in manifest fields the installed version lacked, and runs Check. Uninstall removes hook entries and leaves the project's tools.
+- `rules/new-project-python.md`: tooling moved to `rules/tooling.md`; the Ruff starting selection moved to `docs/tooling.md`.
+
 ## 1.2.0 (2026-11-01)
 
 **Action: none.** Clarifications from the first update to 1.1.0.

@@ -2,6 +2,22 @@
 
 Rules that a tool can check were removed from `rules/`. A linter, type checker or CI job enforces them every time and for every author, whereas prose in an agent's context only asks. This page lists the tools and settings that take over from the removed rules. Configure the ones that fit each project. An existing project's tool choices win.
 
+## Choosing tools
+
+The defaults an agent proposes for a project that lacks a kind of tool. A tool the project already uses wins.
+
+- **JS/TS lint and format:** ESLint with typescript-eslint, plus Prettier. The rule table below is written for them.
+  - Biome is the faster, single-tool option, but it doesn't cover every rule in the table. Before recommending it, tell the user which of those rules they would lose.
+  - Oxlint can run before ESLint as a fast first pass, with `eslint-plugin-oxlint` turning off the rules it already checks.
+  - Svelte: add `eslint-plugin-svelte` and `prettier-plugin-svelte`, and type-check with `svelte-check`.
+- **JS/TS types:** `tsc --noEmit` with the strict options in the table below.
+- **Python lint and format:** Ruff, configured under `[tool.ruff]` in `pyproject.toml`. A good starting rule selection: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`.
+- **Python types:** pyright, or mypy with `disallow_untyped_defs`.
+- **JS/TS tests:** Vitest; keep Jest where the project uses it. Testing Library for UI. Playwright only for the few end-to-end journeys.
+- **Python tests:** pytest, with `pytest-randomly` and `pytest-cov`.
+- **Test runner settings:** the ones under [Repository and CI](#repository-and-ci).
+- **Git hooks:** lefthook for any language, pre-commit where the project is Python, or husky with lint-staged where a JS project already has them.
+
 ## Formatting
 
 - JS/TS: Prettier. Python: Ruff's formatter (or Black).
@@ -99,7 +115,7 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
 
 ## Agent hooks
 
-Most coding agents can run commands around their own actions. Wire these in your agent tool. The commands are project-specific.
+Most coding agents can run commands around their own actions. Wire these in your agent tool. The commands are project-specific. [Set up tooling](../INSTALL.md#set-up-tooling) wires the first two.
 
 - **After each file edit:** run the formatter and auto-fixable lint rules on that file.
 - **When the agent finishes a task:** run lint, type checking and the affected tests, and hand any failures back to the agent.

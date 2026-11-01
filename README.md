@@ -10,7 +10,7 @@ checklists/
   review.md         the definition of done, checked before work is handed off
 docs/
   tooling.md        linters, type checkers, CI and hooks that enforce the checkable rules
-INSTALL.md          instructions for the installing agent: scope table, install, update, uninstall
+INSTALL.md          instructions for the installing agent: scope table, install, tooling setup, update, check, uninstall
 CHANGELOG.md        releases, each with the action an update needs
 ```
 
@@ -27,6 +27,7 @@ The agent asks you a few questions before it changes anything:
   - **Project:** a copy in `coding-rules/` inside the project, committed with it, so the rules work for everyone who clones the project, including cloud sessions. Each project is updated separately.
 - **Tools:** which agent tools to wire.
 - **i18n:** whether the project translates its user-facing text, which enables the i18n rules.
+- **Tooling:** whether to look at the project's linter, formatter, type checker and tests, propose what's missing, and wire agent hooks that format and lint each file the agent edits. The tools belong to the project; only the hooks are tracked by the install.
 - **Version:** the latest release or `main`.
 
 The agent wires each rule with its own tool's native mechanism: always-on rules, path-scoped rules, on-demand skills, and a reviewer subagent where the tool has one. Where a mechanism is missing, it falls back to instructions in a marked block of the tool's instructions file (such as `AGENTS.md`). Wiring files only reference the rule files and never contain rule text, so they cannot drift from this repository. The agent records what it installed in `manifest.json` in the rules folder.
@@ -40,7 +41,16 @@ The agent:
 2. reads every changelog entry since your installed version;
 3. fetches the new version and does any manual steps the changelog lists;
 4. re-wires whatever changed, asking before it overwrites anything you edited;
-5. tells you what changed in how it should work.
+5. runs the check below;
+6. tells you what changed in how it should work.
+
+> Check the coding rules. Follow the INSTALL.md in the coding-rules folder.
+
+The check looks for install decisions that later changes made wrong: a `CLAUDE.md` that hides `AGENTS.md`, an agent tool that isn't wired yet, a project that started translating, links that don't survive a checkout, hooks that call tools the project no longer uses.
+
+> Set up the coding-rules tooling for this project.
+
+Runs the tooling step on its own, for example in a project you started after a personal install. Adding a linter, formatter or test runner in any other way also leads the agent to offer the hooks.
 
 To remove the rules, ask the agent to uninstall them; it removes exactly what the manifest lists.
 
@@ -58,7 +68,8 @@ To remove the rules, ask the agent to uninstall them; it removes exactly what th
 | `rules/javascript.md` | JavaScript (and TypeScript) | JS/TS files |
 | `rules/typescript.md` | TypeScript, on top of JavaScript | TS files |
 | `rules/python.md` | Python | Python files |
-| `rules/new-project-python.md` | Python packaging and tooling choices | when setting up a Python project |
+| `rules/new-project-python.md` | Python packaging choices | when setting up a Python project |
+| `rules/tooling.md` | Proposing a linter, formatter, type checker and tests; wiring agent hooks | when adding or changing them |
 | `rules/react.md` | React components and hooks | React files |
 | `rules/svelte.md` | Svelte 5 runes, state and snippets | Svelte files |
 | `rules/testing.md` | Testing in any language | test files |
@@ -123,6 +134,6 @@ To keep every line in an agent's context worth its cost, two kinds of rules were
 ## Changing the rules
 
 1. Edit or add the file in `rules/` (or `checklists/`): plain Markdown, no frontmatter, no tool-specific syntax.
-2. For a new rule or a scope change, update the scope table in `INSTALL.md`; nowhere else defines scope.
+2. For a new rule or a scope change, update the scope table in `INSTALL.md`; nowhere else defines scope. When Install gains a decision, add it to the decisions table under Check, with a Check step if a later change can make it wrong.
 3. In `CHANGELOG.md`, add the change under the version the branch will release, `## X.Y.Z (YYYY-MM-DD)`, with its **Action**. Pick the version by the rules at the top of the changelog. If the branch already has that heading, add to it, and raise the version if a later change needs a bigger bump.
 4. Before merging, set the heading's date to the merge date. After merging, tag the merge commit `vX.Y.Z` and publish a release whose notes are that changelog entry.

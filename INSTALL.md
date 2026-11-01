@@ -4,14 +4,15 @@ These instructions are for a coding agent. A person starts an install, update or
 
 > Install the coding rules from https://github.com/erkmene/coding-rules. Follow its INSTALL.md.
 
-Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Update](#update), or [Uninstall](#uninstall).
+Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Set up tooling](#set-up-tooling), [Update](#update), [Check](#check), or [Uninstall](#uninstall).
 
 ## Terms
 
 - **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on `main`.
-- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md`.
+- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
 - **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. By default, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file, and one in a subdirectory stops that subdirectory's `AGENTS.md`. So never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
+- **Settings file**: the file where a tool declares its hooks, such as `.claude/settings.json`. It holds the user's own settings too; only the hook entries you add are yours.
 - **Manifest**: `manifest.json` in the rules folder. It records what was installed.
 
 ## Hard rules
@@ -22,11 +23,13 @@ Read this whole file before acting, then follow the section that matches the req
    - the rules folder;
    - `coding-rules-*` files and folders that the manifest lists or that you are creating now;
    - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
-   - an instructions file that does not exist yet, and the parent directories that wiring needs. Record both in the manifest.
+   - an instructions file that does not exist yet, and the parent directories that wiring needs. Record both in the manifest;
+   - hook entries you add to a settings file, and lines you add to `.git/info/exclude`, all recorded in the manifest's `hooks`;
+   - during [Set up tooling](#set-up-tooling), the project files the user agreed to add or change. They belong to the project from then on: don't list them in the manifest, and Uninstall leaves them.
    
    If anything else is in the way, stop and ask the user.
 4. Use only mechanisms your tool documents. If you are not sure your tool supports a mechanism, check its documentation. If you still cannot confirm it, use the fallback for that class. Never guess at a configuration format.
-5. Before you replace or delete a file whose hash (for a symlink, whose target) differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do.
+5. Before you replace or delete a file whose hash (for a symlink, whose target) differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do. The same goes for a hook entry that no longer matches the manifest.
 
 ## The rules and when they load
 
@@ -44,7 +47,8 @@ This table is the only place where rule scope is defined.
 | `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/python.md` | paths | `**/*.py` |
-| `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging, dependency or tooling setup |
+| `rules/new-project-python.md` | activity | creating a Python project, or changing its packaging or dependency setup |
+| `rules/tooling.md` | activity | adding or changing a linter, formatter, type checker or test runner, including when creating a project |
 | `rules/react.md` | paths | `**/*.{jsx,tsx}`, `**/use[A-Z]*.{ts,js}`, `**/hooks/**/*.{ts,js}` |
 | `rules/svelte.md` | paths | `**/*.svelte`, `**/*.svelte.{ts,js}` |
 | `rules/testing.md` | activity + paths | writing or changing tests in any language; files matching any of `**/*.{test,spec}.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/__tests__/**`, `**/test_*.py`, `**/*_test.py`, `**/{test,tests}/**/*.py`, `**/conftest.py`, `**/tests.py` |
@@ -102,11 +106,24 @@ If the instructions file does not exist, create it with only the block. If it al
 - `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
+- `declined`: the opt-in rules the user said no to, e.g. `["i18n"]`.
+- `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
+- `alwaysWiring`: an object mapping each tool in `tools` to how its **always** rules are wired: `link` (a symlink to the rule file), `reference` (the tool includes the file by reference) or `fallback` (a line in the managed block).
+- `cowork`: in personal mode, whether the user said they work in Cowork; `null` in project mode.
+- `hooks`: an array with one object per hook entry you added (empty if none), each with:
+  - `project`: the project root;
+  - `tool`: the tool, as named in `tools`;
+  - `settingsFile`: the settings file the entry is in;
+  - `entry`: the entry exactly as you wrote it;
+  - `exclude`: the lines you added to `.git/info/exclude` for it (empty if none).
+
+  Hook scripts go in `files` with their hashes.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
   - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
-  - in project mode, each copied file: rules, checklists, `INSTALL.md` and `CHANGELOG.md`.
+  - hook scripts;
+  - in project mode, each copied file: rules, checklists, docs, `INSTALL.md` and `CHANGELOG.md`.
 
 ## Install
 
@@ -116,9 +133,11 @@ If the instructions file does not exist, create it with only the block. If it al
    - **i18n.** Whether the project translates, or will translate, its user-facing text.
    - **Version.** The latest release tag (the default) or `main`. If the source has no release tags yet, say so and offer `main`.
    - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
+   - **Cowork** (personal mode only, when Claude Code is among the tools). Whether they work in Cowork sessions on the desktop.
+   - **Tooling** (only when you are working in a project). Whether to look at the project's linter, formatter, type checker and tests, propose what is missing, and wire agent hooks that run them after each edit. See [Set up tooling](#set-up-tooling).
 2. **Get the source.**
    - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
-   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
+   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.**
@@ -127,14 +146,44 @@ If the instructions file does not exist, create it with only the block. If it al
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear. In Claude Code, run `claude -p "/context"` in the project directory, which starts a fresh session, and look for them among the memory files it lists;
    - in project mode, `git check-ignore` reports none of the rules folder, the wiring files or the instructions file as ignored.
-7. **Report:**
+7. **Set up tooling** if the user agreed, following [Set up tooling](#set-up-tooling).
+8. **Report:**
    - the mode and the version;
    - the files you created, replaced or skipped;
    - which rules use a fallback line;
+   - the tools added and hooks wired, or that the user declined;
    - that the user should start a new session before relying on the rules: always rules load only when a session starts, and some tools, Claude Code among them, don't see agent or skill folders created during a session;
    - anything that needs the user's attention.
    
    In project mode, remind the user to commit the changes.
+
+## Set up tooling
+
+Run this during Install when the user agreed, when a changelog Action asks for it, when `rules/tooling.md` sends you here, or when the user asks ("Set up the coding-rules tooling for this project"). It works on one project, in either mode, and `rules/tooling.md` applies throughout.
+
+1. **Look at what the project has:** its linter, formatter, type checker, test runner and git hooks, and the scripts that run them.
+2. **Propose**, in one message:
+   - each missing kind of tool, with one recommendation from "Choosing tools" in `docs/tooling.md` and the reason it fits;
+   - the agent hooks below;
+   - a git pre-commit hook, if the project has none.
+
+   Add only what the user accepts.
+3. **Add the tools** the user accepted: dev dependencies, configuration, and the project scripts `rules/tooling.md` asks for. Run each script once to see that it works.
+4. **Wire the agent hooks** for each tool in the manifest's `tools` that documents hooks (hard rule 4):
+   - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on.
+   - **When the agent finishes** (optional; ask): run the type checker and the affected tests, and hand failures back the same way. Make sure the hook cannot loop forever when a failure can't be fixed.
+
+   Put each hook's logic in a script named by hard rule 2, such as `.claude/hooks/coding-rules-post-edit.sh`, and keep the entry in the settings file to a single call of that script. The settings file:
+   - project mode: the tool's project settings file that is committed, so the hooks run for everyone;
+   - personal mode: the tool's project settings file that is not committed (in Claude Code, `.claude/settings.local.json`). Add each script, and the settings file if Git doesn't already ignore it, to `.git/info/exclude`. Never use user-level settings: the commands differ per project.
+
+   In Claude Code, the after-edit hook is a `PostToolUse` hook matching the file-editing tools, the finish hook is a `Stop` hook, the hook reads the edited file's path from the JSON on its standard input, and exit code 2 hands its standard error back to Claude. Check the hooks documentation for the current tool names and input fields.
+
+   For a tool without documented hooks, add a fallback line to the managed block: "Unless your tool already runs it: after editing a file, run `<command>` on it and fix what it reports."
+5. **Add the git pre-commit hook** if the user accepted it, using the project's hook manager. Like the tools, it belongs to the project.
+6. **Verify:** run each hook script with the input its tool would send, on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error, then delete the file. If the tool loads hooks only when a session starts, tell the user that the hooks run from their next session.
+7. **Record** each hook entry in the manifest's `hooks`, and each script in `files`.
+8. **Report** the tools you added, the scripts and hooks you wired, any fallback lines, and the files the user should commit.
 
 ## Update
 
@@ -149,6 +198,8 @@ If the instructions file does not exist, create it with only the block. If it al
 5. Get the target version.
    - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
+   
+   Then read the target version's `INSTALL.md`, and follow its Update section from step 6 on, so the update uses the procedure it installs.
 6. Carry out every **manual** action. Ask when an action needs a decision.
 7. Reconcile the wiring with the table in the target version's `INSTALL.md`. Wiring that already matches the table stays as it is, even when the manifest's version predates it; if the manifest doesn't list it, add it in step 8:
    - create wiring that is missing, including wiring for a rule that used a fallback line and that your tool can now wire natively;
@@ -156,19 +207,50 @@ If the instructions file does not exist, create it with only the block. If it al
    - delete manifest-listed wiring that the target table no longer calls for, whether its rule was removed or its class changed;
    - in project mode, delete manifest-listed copied files that the target version no longer ships, such as a removed or renamed rule (hard rule 5 applies);
    - delete any directory in `directories` that this leaves empty.
-8. Rewrite the managed block and the manifest, then verify as in Install step 6.
-9. Report:
+8. Rewrite the managed block and the manifest, then verify as in Install step 6. If the manifest lacks a field that the [manifest](#the-manifest) section defines, fill it in from the existing wiring, and ask the user what the wiring can't tell you.
+9. Run [Check](#check).
+10. Report:
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
    - the files you changed;
+   - what Check found and what you changed because of it;
    - when the update changes rule files, that changed rules may make existing code non-compliant. The rules apply to code as it is touched, so name any spot you noticed as a possible follow-up, and don't change it as part of the update;
-   - that the user should start a new session, as in Install step 7, so the updated rules and wiring load.
+   - that the user should start a new session, as in Install step 8, so the updated rules and wiring load.
    
    In project mode, remind the user to commit the changes.
+
+## Check
+
+Install makes decisions from the project and the user's setup as they are that day, and later changes can make them wrong. Check finds those cases. Update runs it every time, and the user can run it alone ("Check the coding rules"). Ask before changing anything.
+
+1. **Verify** as in Install step 6.
+2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it, or in a subdirectory of it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer a fix: an `@AGENTS.md` import in that `CLAUDE.md`, or the managed block in it as well. The file is theirs, so change it only with their agreement.
+3. **New tools.** Detect agent tools as in Install step 1. For each one not in `tools`, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
+4. **Declined opt-ins.** For each rule in `declined`, look for signs the project now needs it, and ask again if you find any. For i18n, that is a file matching its globs.
+5. **Always wiring.**
+   - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules, tell the user and offer to add them.
+   - Personal mode, when `cowork` is `false` and Claude Code is in `tools`: ask whether the user works in Cowork now, and if so, add the fallback lines.
+6. **Hooks.** For each entry in `hooks`: it is still in its settings file and still matches the manifest (hard rule 5); its script exists and matches its hash; and the project scripts it calls still exist and still run the project's current tools. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
+7. **Record** what changed in the manifest, and **report** what you found and what you changed.
+
+Every install decision, and what can make it wrong later:
+
+| Decision | Can become wrong when | Caught by |
+|---|---|---|
+| Version | a new release comes out | Update |
+| Mode, location | the user moves the clone, which breaks every reference | Check step 1 |
+| Instructions file | someone adds a `CLAUDE.md` next to an `AGENTS.md` | Check step 2 |
+| Tools | the user starts using another agent tool | Check step 3 |
+| i18n | the project starts translating | Check step 4 |
+| Links or fallback lines | someone checks the project out without symlink support | Check step 5 |
+| Cowork | the user starts working in Cowork | Check step 5 |
+| Ignore rules | someone ignores the rules folder, wiring or instructions file | Check step 1 |
+| Hooks | the project changes its tools or scripts, or someone edits the settings file | Check step 6 |
 
 ## Uninstall
 
 1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
-3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
-4. Report what was removed. In project mode, remind the user to commit the changes.
+3. Remove each entry in `hooks` from its settings file, and its `exclude` lines from `.git/info/exclude` (hard rule 5 applies). Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
+4. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
+5. Report what was removed. In project mode, remind the user to commit the changes.
