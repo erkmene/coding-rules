@@ -1,12 +1,12 @@
 # TypeScript Guidelines
 
-Apply to all TypeScript code, on top of the JavaScript guidelines and universal principles.
+Apply to all TypeScript code, on top of the JavaScript guidelines and universal principles. In Svelte files, they apply to `<script lang="ts">` blocks.
 
 ## Compiler configuration
 
 - `strict: true` is non-negotiable in `tsconfig.json`. Also enable `noUncheckedIndexedAccess` (indexing returns `T | undefined`, which is the truth) and, for new projects, `exactOptionalPropertyTypes`.
 - Never weaken compiler options to make an error go away; fix the code.
-- These options apply to code the project owns. When the type check also covers code governed by another config (a sibling app's sources, vendored or generated code), either match that config or isolate that code behind its own config (a separate `tsconfig` or a project reference), and note the gap in the handoff. Matching the other config is not weakening; fixing the other code is outside the task.
+- These options apply to code the project owns. When the type check also covers code governed by another config (a sibling app's sources, vendored or generated code), the usual choice is to match that config. Isolating that code behind its own config (a separate `tsconfig` or a project reference) may need changes to the other project, such as `composite: true` on a referenced one. Either way, note the gap in the handoff. Matching the other config is not weakening; fixing the other code is outside the task.
 
 ## Unknown values and assertions
 
