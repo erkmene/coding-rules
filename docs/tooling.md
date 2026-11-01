@@ -9,7 +9,11 @@ The defaults an agent proposes for a project that lacks a kind of tool. A tool t
 - **JS/TS lint and format:** ESLint with typescript-eslint, plus Prettier. The rule table below is written for them.
   - Biome is the faster, single-tool option, but it doesn't cover every rule in the table. Before recommending it, tell the user which of those rules they would lose.
   - Oxlint can run before ESLint as a fast first pass, with `eslint-plugin-oxlint` turning off the rules it already checks.
-  - Svelte: add `eslint-plugin-svelte` and `prettier-plugin-svelte`, and type-check with `svelte-check`.
+  - Svelte: add `eslint-plugin-svelte` and `prettier-plugin-svelte`, and type-check with `svelte-check`. With typescript-eslint's strict presets:
+    - turn off core `prefer-const` for `.svelte` files and use `svelte/prefer-const`, since the core rule flags `let { … } = $props()`;
+    - `@typescript-eslint/no-useless-default-assignment` flags `value = $bindable()`; turn it off for `.svelte` files;
+    - `@typescript-eslint/no-unnecessary-condition` calls index guards always truthy unless `noUncheckedIndexedAccess` is on;
+    - imported `.svelte` components type as `any` to typescript-eslint, so the `no-unsafe-*` rules fire on their callback props unless the parameters are typed.
 - **JS/TS types:** `tsc --noEmit` with the strict options in the table below.
 - **Python lint and format:** Ruff, configured under `[tool.ruff]` in `pyproject.toml`. A good starting rule selection: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`.
 - **Python types:** pyright, or mypy with `disallow_untyped_defs`.
@@ -111,7 +115,7 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
   - run them in random order (`pytest-randomly`, Vitest `sequence.shuffle`, Jest `--randomize`);
   - reset mocks between tests in runner config: `clearMocks` for call history, plus `resetMocks` (Jest) or `mockReset` (Vitest) for standalone mock implementations, plus `restoreMocks` for spies and replaced properties;
   - reset network handlers after each test (MSW: `server.resetHandlers()` in `afterEach`);
-  - enforce coverage thresholds in runner config.
+  - enforce coverage thresholds in runner config, once the suite covers the main modules.
 
 ## Agent hooks
 

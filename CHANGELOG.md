@@ -16,11 +16,11 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 ### Added
 
-- `rules/tooling.md`: propose missing linters, formatters, type checkers and test runners for the owner to accept, run them through project scripts, and wire agent hooks that run them.
+- `rules/tooling.md`: propose missing linters, formatters, type checkers and test runners for the owner to accept, run them through project scripts, and wire agent hooks that run them. A formatter adopted in existing code reformats in a commit of its own, listed in `.git-blame-ignore-revs`; repositories with several packages keep tools per package; plugins beyond the chosen tools are proposed separately.
 - `INSTALL.md`: a Set up tooling section. It proposes tools, wires an after-edit hook that formats and lints the edited file and hands remaining errors back to the agent, an optional finish hook for types and tests, and a git pre-commit hook. Install offers it; it can also be run alone.
 - `INSTALL.md`: a Check section, run by every Update and on request, that catches install decisions later changes made wrong: a `CLAUDE.md` shadowing `AGENTS.md`, unwired agent tools, a declined i18n the project now needs, links in checkouts without symlink support, Cowork, and stale hooks. A table lists every install decision and what catches it.
 - `INSTALL.md`: manifest fields `declined`, `tools`, `alwaysWiring`, `cowork` and `hooks`. `declined` records the questions the user said no to, so Check asks again only when something new turns up, and a later yes clears the key. Check keeps asking about Cowork until the user says yes or asks it to stop, since nothing in a project shows it. Install asks about Cowork instead of assuming.
-- `docs/tooling.md`: a Choosing tools section with the default tools per stack.
+- `docs/tooling.md`: a Choosing tools section with the default tools per stack, including notes on typescript-eslint's strict presets in Svelte. Coverage thresholds wait until the suite covers the main modules.
 
 ### Changed
 
@@ -28,6 +28,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 - `INSTALL.md`: project mode copies `docs/` too, since `rules/tooling.md` refers to it.
 - `INSTALL.md`: Update follows the target version's procedure from step 6 on, fills in manifest fields the installed version lacked, and runs Check. Uninstall removes hook entries before deleting files, deletes a settings file it created only once every entry in it is handled and nothing else is left, and leaves the project's tools. Tooling fallback lines are recorded in `hooks`, so rewriting the managed block keeps them, and in personal mode they name their project.
 - `INSTALL.md`: Update runs Check even when the install is already up to date.
+- `INSTALL.md`: Set up tooling shows a formatter's reformat size before the user accepts it, routes the after-edit hook to each package's scripts in a repository with several packages, and verifies the git pre-commit hook by staging a lint error in each package. Hook entries record their `event`. An install can track a branch other than `main`, to try changes before their release.
 - `INSTALL.md`: when a `CLAUDE.md` shadows the block, Check offers to add the block to it, recorded so Uninstall removes only the block, instead of an import that Uninstall couldn't track. Uninstall keeps exclude lines for the files it keeps.
 - `rules/new-project-python.md`: tooling moved to `rules/tooling.md`; the Ruff starting selection moved to `docs/tooling.md`.
 

@@ -8,7 +8,7 @@ Read this whole file before acting, then follow the section that matches the req
 
 ## Terms
 
-- **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on `main`.
+- **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on a branch, usually `main`.
 - **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
 - **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. By default, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file, and one in a subdirectory stops that subdirectory's `AGENTS.md`. So never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
@@ -104,7 +104,7 @@ If the instructions file does not exist, create it with only the block. If it al
 `manifest.json` in the rules folder, with these fields. Write every path in it as an absolute path in personal mode, and relative to the project root in project mode.
 
 - `source`: the repository URL.
-- `version`: the release tag, or `main`.
+- `version`: the release tag, or the branch: `main`, or a branch the user is trying before its release.
 - `commit`: the full commit hash that was installed.
 - `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
@@ -124,6 +124,7 @@ If the instructions file does not exist, create it with only the block. If it al
   - `project`: the project root;
   - `tool`: the tool, as named in `tools`;
   - `settingsFile`: the settings file the entry is in, or `null` for a fallback line;
+  - `event`: the hook event the entry is under, such as `PostToolUse`, or `null` for a fallback line;
   - `entry`: the entry exactly as you wrote it, or `null` for a fallback line;
   - `instructionsFile` and `fallbackLine`: for a tool without documented hooks, the instructions file and the line you added to its managed block; otherwise `null`;
   - `exclude`: the lines you added to the exclude file for it (empty if none);
@@ -143,7 +144,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Mode.** Personal: one clone serves all their projects on this machine, it is wired into their tools' user-level configuration, and updating it updates every project at once. Project: a copy is committed into this project, so it works for everyone who clones the project and in cloud or CI sessions, and each project is updated on its own. Recommend personal for someone working alone on one machine, and project for shared repositories or cloud sessions.
    - **Tools.** Which agent tools to wire. List the ones you detected from configuration folders in the project and in the user's home directory, plus yourself.
    - **i18n.** Whether the project translates, or will translate, its user-facing text.
-   - **Version.** The latest release tag (the default) or `main`. If the source has no release tags yet, say so and offer `main`.
+   - **Version.** The latest release tag (the default) or `main`. A user trying unreleased changes can name another branch. If the source has no release tags yet, say so and offer `main`.
    - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
    - **Cowork** (personal mode only, when Claude Code is among the tools). Whether they work in Cowork sessions on the desktop.
    - **Tooling** (only when you are working in a project). Whether to look at the project's linter, formatter, type checker and tests, propose what is missing, and wire agent hooks that run them after each edit. See [Set up tooling](#set-up-tooling).
@@ -175,7 +176,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 
 1. **Look at what the project has:** its linter, formatter, type checker, test runner and git hooks, and the scripts that run them.
 2. **Propose**, in one message:
-   - each missing kind of tool, with one recommendation from "Choosing tools" in `docs/tooling.md` and the reason it fits;
+   - each missing kind of tool, with one recommendation from "Choosing tools" in `docs/tooling.md` and the reason it fits. For a formatter, include the size of the reformat it would cause, as `rules/tooling.md` says;
    - the agent hooks below, naming the settings file each one goes in;
    - a git pre-commit hook, if the project has none.
 
@@ -184,6 +185,8 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 4. **Wire the agent hooks** for each tool in the manifest's `tools` that documents hooks (hard rule 4):
    - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on.
    - **When the agent finishes** (optional; ask): run the type checker and the affected tests, and hand failures back the same way. Make sure the hook cannot loop forever when a failure can't be fixed.
+
+   In a repository with several packages, the script sends each edited file to the scripts of the package it belongs to: the one with the nearest `package.json`, `pyproject.toml` or similar above the file.
 
    Put each hook's logic in a script named by hard rule 2, such as `.claude/hooks/coding-rules-post-edit.sh`, and keep the entry in the settings file to a single call of that script. The settings file:
    - project mode: the tool's project settings file that is committed, so the hooks run for everyone;
@@ -195,7 +198,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
    - project mode: "Unless your tool already runs it: after editing a file, run `<command>` on it and fix what it reports."
    - personal mode, where the block applies to every project: "Unless your tool already runs it: after editing a file in `<project root>`, run `<command>` on it and fix what it reports."
 5. **Add the git pre-commit hook** if the user accepted it, using the project's hook manager. Like the tools, it belongs to the project.
-6. **Verify:** run each hook script with the input its tool would send, on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error, then delete the file. If the tool loads hooks only when a session starts, tell the user that the hooks run from their next session.
+6. **Verify:** run each hook script with the input its tool would send, on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error, then delete the file. For the git pre-commit hook, stage a file with a lint error in each package and check that the commit is refused; a hook that lets a clean commit through may still be checking nothing. Then unstage and delete those files. If the tool loads hooks only when a session starts, tell the user that the hooks run from their next session.
 7. **Record** each hook entry in the manifest's `hooks`, each script in `files`, and each directory you created in `directories`. Then verify the ignore rules as in Install step 6.
 8. **Report** the tools you added, the scripts and hooks you wired, any fallback lines, and the files the user should commit.
 
@@ -207,8 +210,8 @@ Run this during Install when the user agreed, when a changelog Action asks for i
    - Project: clone the source into a temporary folder outside the project, with enough history to include the manifest's `commit` (a full clone is simplest).
    
    This checkout is the source repository for steps 3 to 5. Run every git command in those steps there, never in the project.
-3. Pick the target version: the latest release tag, unless the user names one. If the install tracks `main`, the target is the newest commit on the fetched remote branch (`origin/main`), not a local `main` branch, which a fetch does not move. Compare the manifest's `commit` with the target's commit; if they are the same, say so, run [Check](#check), report what it found, and stop.
-4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is `main`, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`).
+3. Pick the target version: the latest release tag, unless the user names one. If the install tracks a branch, the target is the newest commit on the fetched remote branch (`origin/<branch>`), not a local branch, which a fetch does not move. Compare the manifest's `commit` with the target's commit; if they are the same, say so, run [Check](#check), report what it found, and stop.
+4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is a branch, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`).
 5. Get the target version.
    - Personal: check out the target commit in the clone.
    - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
