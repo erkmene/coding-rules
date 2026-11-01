@@ -12,6 +12,7 @@ Read this whole file before acting, then follow the section that matches the req
 - **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
 - **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. By default, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file, and one in a subdirectory stops that subdirectory's `AGENTS.md`. So never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
+- **Exclude file**: the repository's local ignore file, at the path `git rev-parse --git-path info/exclude` prints in the project root. It is usually `.git/info/exclude`, but not in a linked worktree or a submodule, where `.git` is a file.
 - **Settings file**: the file where a tool declares its hooks, such as `.claude/settings.json`. It holds the user's own settings too; only the hook entries you add are yours.
 - **Manifest**: `manifest.json` in the rules folder. It records what was installed.
 
@@ -24,7 +25,7 @@ Read this whole file before acting, then follow the section that matches the req
    - `coding-rules-*` files and folders that the manifest lists or that you are creating now;
    - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
    - an instructions file or settings file that does not exist yet, and the parent directories that wiring or hook scripts need. Record them in the manifest;
-   - hook entries you add to a settings file, and lines you add to `.git/info/exclude`, all recorded in the manifest's `hooks`;
+   - hook entries you add to a settings file, and lines you add to the exclude file, all recorded in the manifest's `hooks`;
    - during [Set up tooling](#set-up-tooling), the project files the user agreed to add or change. They belong to the project from then on: don't list them in the manifest, and Uninstall leaves them.
    
    If anything else is in the way, stop and ask the user.
@@ -125,7 +126,7 @@ If the instructions file does not exist, create it with only the block. If it al
   - `settingsFile`: the settings file the entry is in, or `null` for a fallback line;
   - `entry`: the entry exactly as you wrote it, or `null` for a fallback line;
   - `instructionsFile` and `fallbackLine`: for a tool without documented hooks, the instructions file and the line you added to its managed block; otherwise `null`;
-  - `exclude`: the lines you added to `.git/info/exclude` for it (empty if none);
+  - `exclude`: the lines you added to the exclude file for it (empty if none);
   - `createdSettingsFile`: `true` if you created the settings file for this entry.
 
   Hook scripts go in `files` with their hashes.
@@ -186,7 +187,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 
    Put each hook's logic in a script named by hard rule 2, such as `.claude/hooks/coding-rules-post-edit.sh`, and keep the entry in the settings file to a single call of that script. The settings file:
    - project mode: the tool's project settings file that is committed, so the hooks run for everyone;
-   - personal mode: the tool's project settings file that is not committed (in Claude Code, `.claude/settings.local.json`). Add each script, and the settings file if Git doesn't already ignore it, to `.git/info/exclude`. Never use user-level settings: the commands differ per project.
+   - personal mode: the tool's project settings file that is not committed (in Claude Code, `.claude/settings.local.json`). Add each script, and the settings file if Git doesn't already ignore it, to the exclude file. Never use user-level settings: the commands differ per project.
 
    In Claude Code, the after-edit hook is a `PostToolUse` hook matching the file-editing tools, the finish hook is a `Stop` hook, the hook reads the edited file's path from the JSON on its standard input, and exit code 2 hands its standard error back to Claude. Check the hooks documentation for the current tool names and input fields.
 
@@ -237,8 +238,8 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 Install makes decisions from the project and the user's setup as they are that day, and later changes can make them wrong. Check finds those cases. Update runs it every time, and the user can run it alone ("Check the coding rules"). Ask before changing anything, and don't ask again about anything in `declined` unless what you knew then has changed.
 
 1. **Verify** as in Install step 6.
-2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer a fix: an `@AGENTS.md` import in that `CLAUDE.md`, or the managed block in it as well. The file is theirs, so change it only with their agreement. If they decline, record `shadow:<path>`.
-3. **New tools.** Detect agent tools as in Install step 1. For each one in neither `tools` nor `declined`, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
+2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it (see [Terms](#terms)). When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer to add the managed block to that file as well, as for any instructions file that already exists. The rest of the file is theirs, so add the block only with their agreement, and record the file in `files` with `null`, so Uninstall removes only the block. If they decline, record `shadow:<path>`.
+3. **New tools.** Detect agent tools as in Install step 1. For each one that isn't in `tools`, and has no `tool:<name>` key in `declined` whose recorded evidence still holds, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
 4. **Declined opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it, and ask again only if they weren't there when the user said no. For i18n, the signs are files matching its globs.
    - Project mode: compare with the `declined` value, and update it with what you found.
    - Personal mode: look only in the project you are working in, if any. Ask when it has such files and they weren't in the value of `i18n:<project root>` (or that key is missing), and say that a yes wires the rule for every project. If the user says no, record `i18n:<project root>` with the files you found.
@@ -264,7 +265,7 @@ Every install decision, and what can make it wrong later:
 
 ## Uninstall
 
-1. Remove each entry in `hooks` from its settings file, and its `exclude` lines from `.git/info/exclude` (hard rule 5 applies); a `fallbackLine` goes with the managed block in step 3. Once every entry in a settings file is handled, delete the file if you created it and nothing else is left in it; otherwise keep it. If the user keeps an edited entry, keep the script it calls as well. Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
+1. Remove each entry in `hooks` from its settings file (hard rule 5 applies); a `fallbackLine` goes with the managed block in step 3. If the user keeps an edited entry, keep the script it calls as well. Once every entry in a settings file is handled, delete the file if you created it and nothing else is left in it; otherwise keep it. Then remove the `exclude` lines from the exclude file, except those covering a script or settings file you kept, so kept files stay out of commits. Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
 2. Delete every file the manifest lists, except instructions files that existed before the install and scripts kept in step 1 (hard rule 5 applies). Settings files are handled only in step 1. For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 3. Remove the managed block from each instructions file.
 4. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
