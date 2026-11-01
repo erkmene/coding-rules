@@ -11,7 +11,7 @@ Read this whole file before acting, then follow the section that matches the req
 - **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on `main`.
 - **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `INSTALL.md` and `CHANGELOG.md`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
-- **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root.
+- **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. In Claude Code, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file. So never create one of those in a project that has an `AGENTS.md`, at the root or in a subdirectory; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
 - **Manifest**: `manifest.json` in the rules folder. It records what was installed.
 
 ## Hard rules
@@ -26,7 +26,7 @@ Read this whole file before acting, then follow the section that matches the req
    
    If anything else is in the way, stop and ask the user.
 4. Use only mechanisms your tool documents. If you are not sure your tool supports a mechanism, check its documentation. If you still cannot confirm it, use the fallback for that class. Never guess at a configuration format.
-5. Before you replace or delete a file whose hash differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do.
+5. Before you replace or delete a file whose hash (for a symlink, whose target) differs from the one in the manifest, the user has edited it. Show them the difference and ask what to do.
 
 ## The rules and when they load
 
@@ -56,7 +56,7 @@ Keep the `testing.md` globs equal to the union of the `testing-js.md` and `testi
 
 How to wire each class:
 
-- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file. Otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task."
+- **always**: use your tool's always-on mechanism. If that mechanism can include a file by reference, reference the rule file; otherwise, add a fallback line to the managed block: "Read `<path>` at the start of every task." A symlink to the rule file is a reference, not a copy, where your tool documents following symlinks. In Claude Code, link `.claude/rules/coding-rules-<rule>.md` to the rule file: rules without `paths` load at the start of every session. In project mode, make the link relative. Claude Code treats a link whose target is outside the session's working directory as an external import, which loads only after the user approves it. Where links don't survive a checkout (Git on Windows with `core.symlinks=false` writes them as plain files), use the fallback line.
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
 - **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
@@ -100,7 +100,7 @@ If the instructions file does not exist, create it with only the block. If it al
 - `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
 - `files`: an object mapping the path of every file you created or manage to its SHA-256 hash. Include:
-  - wiring files;
+  - wiring files. For a symlink, record its target path as `readlink` prints it instead of a hash;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - in project mode, each copied file: rules, checklists, `INSTALL.md` and `CHANGELOG.md`.
 
@@ -127,6 +127,7 @@ If the instructions file does not exist, create it with only the block. If it al
    - the mode and the version;
    - the files you created, replaced or skipped;
    - which rules use a fallback line;
+   - that the user should start a new session before relying on the rules: always rules load only when a session starts, and some tools, Claude Code among them, don't see agent or skill folders created during a session;
    - anything that needs the user's attention.
    
    In project mode, remind the user to commit the changes.
@@ -155,13 +156,14 @@ If the instructions file does not exist, create it with only the block. If it al
 9. Report:
    - the old and new versions;
    - a short summary of the changelog entries that change how the agent should work;
-   - the files you changed.
+   - the files you changed;
+   - if you created wiring, that the user should start a new session, as in Install step 7.
    
    In project mode, remind the user to commit the changes.
 
 ## Uninstall
 
-1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). Then delete each directory in `directories` that is now empty, in the order listed.
+1. Read the manifest. Delete every file it lists, except instructions files that existed before the install (hard rule 5 applies). For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 2. Remove the managed block from each instructions file.
 3. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
 4. Report what was removed. In project mode, remind the user to commit the changes.

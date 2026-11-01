@@ -10,7 +10,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 ## Unreleased
 
-**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`.
+**Action: re-wire.** The scope table gained `rules/svelte.md`, and the JavaScript and TypeScript rules now also match `**/*.svelte`. Claude Code installs that used fallback lines for the always rules link them from `.claude/rules/` instead, and the fallback lines leave the managed block.
 
 ### Added
 
@@ -22,6 +22,9 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 - `rules/universal.md`: the size caps are a signal; split only along a seam where each part stands alone.
 - `rules/universal.md`: a duplicate whose extraction falls outside the task stays, cross-referenced, and the extraction is reported as a follow-up.
 - `rules/typescript.md`: strictness options apply to code the project owns; code under another config is matched or isolated, and the gap noted.
+- `INSTALL.md`: an always rule can be wired as a symlink to the rule file (with Claude Code's details); the manifest records a symlink's target path instead of a hash; uninstall removes links, not targets.
+- `INSTALL.md`: never create a `CLAUDE.md` in a project that has an `AGENTS.md`, since Claude Code then stops reading `AGENTS.md`.
+- `INSTALL.md`: the install and update reports tell the user to start a new session.
 
 ## 1.0.0 (2026-10-30)
 
