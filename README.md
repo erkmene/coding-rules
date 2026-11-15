@@ -24,7 +24,7 @@ The agent asks you a few questions before it changes anything:
 
 - **Mode:**
   - **Personal:** one clone (default `~/coding-rules`), wired into your agent tools' user-level configuration. It serves all your projects on that machine, and updating the clone updates all of them. It does not reach teammates, CI or cloud sessions.
-  - **Project:** a copy in `coding-rules/` inside the project, committed with it, so the rules work for everyone who clones the project, including cloud sessions. Each project is updated separately.
+  - **Project:** a copy in `.coding-rules/` inside the project (or a folder you name), committed with it, so the rules work for everyone who clones the project, including cloud sessions. Each project is updated separately.
 - **Tools:** which agent tools to wire.
 - **i18n:** whether the project translates its user-facing text, which enables the i18n rules.
 - **Tooling:** whether to look at the project's linter, formatter, type checker and tests, propose what's missing, and wire agent hooks that format and lint each file the agent edits. The tools belong to the project; only the hooks are tracked by the install.

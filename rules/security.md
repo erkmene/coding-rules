@@ -10,6 +10,7 @@ Apply to every file in every project.
 ## Never log sensitive data
 
 - Secrets, tokens, passwords, session identifiers, and personal data (names tied to activity, emails, addresses, government IDs, card numbers) never appear in logs.
+- An identifier that grants access by itself, such as a share, invite or reset link's id, is a secret too. It usually sits in a URL, so request logs record the route pattern, not the path.
 - When a sensitive value is needed for correlation, log a stable hash or a last-four fragment, never the value itself.
 - This applies to every output channel: application logs, error reporters, crash dumps, analytics events, and error messages returned to clients.
 - Error responses never expose internals: no stack traces, raw exception text, SQL, or internal identifiers.
