@@ -10,7 +10,7 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 ## 2.1.0 (2026-11-16)
 
-**Action: none.** Check, which every Update runs, now compares each hook script with Set up tooling step 4 and the lint levels with `rules/tooling.md`. It offers to make the after-edit hook show lint warnings, since hooks from 2.0.0 pass on only errors, and to make the size and magic-value rules warnings. In project mode it also offers to keep the project's formatters and linters off the rules folder. Existing project installs stay in `coding-rules/`; only new ones default to `.coding-rules/`.
+**Action: none.** Expect Check, which every Update runs, to report findings on installs from 2.0.0; each is an offer, not a failure of the update. It compares each hook script with Set up tooling step 4 and the lint levels with `rules/tooling.md`, and offers to make the after-edit hook show lint warnings, since hooks from 2.0.0 pass on only errors, and to make the size and magic-value rules warnings. In project mode, Verify reports each formatter or linter that doesn't skip the rules folder, and Check offers to keep it off. Update step 8 adds the new `toolIgnores` field to the manifest. Existing project installs stay in `coding-rules/`; only new ones default to `.coding-rules/`.
 
 ### Added
 
@@ -22,11 +22,11 @@ Version numbers: the major version goes up when an Action is manual; the minor v
 
 ### Changed
 
-- `rules/tooling.md`: a project script given no file paths covers its whole package, supplying a default path only then; `typecheck` takes no file paths. The size and magic-value rules are lint warnings, and the after-edit hook shows them to the agent without failing.
+- `rules/tooling.md`: a project script given no file paths covers its whole package, supplying a default path only then, through a shell wrapper or script file since package managers append arguments; `typecheck` takes no file paths, and `test` takes them only where the runner maps them to tests. The size and magic-value rules are lint warnings, and the after-edit hook shows them to the agent without failing.
 - `checklists/review.md`: the review runs before each pull request or other handoff, not once per batch, as a separate pass with fresh context.
 - `INSTALL.md`: in project mode, the rules folder defaults to `.coding-rules/`, and Install has the user confirm it or name another. The procedure writes it as `<rules folder>`, the managed block names it, and the manifest is found there.
-- `INSTALL.md`: in project mode, Install and Set up tooling add the rules folder to the ignore file of each formatter or linter that would rewrite the copy, recorded in the new manifest field `toolIgnores`, and Uninstall removes those lines. Verify, and so Check, looks for a formatter or linter that doesn't skip the folder; a no is recorded as `tool-ignores:<tool>` in `declined`.
-- `INSTALL.md`: Set up tooling proposes the plugins the rule table needs. In a repository with several packages, the after-edit hook stops looking for a package below the repository root when the root's scripts only fan out to the packages. The after-edit hook shows warnings without failing, and its check covers that. The finish hook finds changed files with `git status`, listing untracked files one by one. A git hook manager's configuration is written before its install command runs.
+- `INSTALL.md`: in project mode, Install and Set up tooling add the rules folder to the ignore file of each formatter or linter that would rewrite the copy, recorded in the new manifest field `toolIgnores`, or asks the user to add it where the tool reads ignores only from its configuration. Uninstall removes those lines once the rules folder is gone. Verify, and so Check, looks for a formatter or linter that doesn't skip the folder; a no is recorded as `tool-ignores:<tool>` in `declined`.
+- `INSTALL.md`: Set up tooling proposes the plugins the rule table needs. In a repository with several packages, the after-edit hook stops looking for a package below the repository root when the root's scripts only fan out to the packages. The after-edit hook shows warnings without failing, and its check covers that. The finish hook finds changed files with `git status -z`, listing untracked files one by one, taking a rename's new path and skipping deletions. A git hook manager's configuration is written before its install command runs.
 - `INSTALL.md`: Check step 6 also checks that each hook script does what Set up tooling step 4 describes, and that the size and magic-value rules are warnings.
 
 ## 2.0.0 (2026-11-01)
