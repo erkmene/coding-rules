@@ -8,6 +8,27 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## 2.1.0 (2026-11-16)
+
+**Action: none.** Expect Check, which every Update runs, to report findings on installs from 2.0.0; each is an offer, not a failure of the update. It compares each hook script with Set up tooling step 4 and the lint levels with `rules/tooling.md`, and offers to make the after-edit hook show lint warnings, since hooks from 2.0.0 pass on only errors, and to make the size and magic-value rules warnings. In project mode, Verify reports each formatter or linter that doesn't skip the rules folder, and Check offers to keep it off. Update step 8 adds the new `toolIgnores` field to the manifest. Existing project installs stay in `coding-rules/`; only new ones default to `.coding-rules/`.
+
+### Added
+
+- `rules/universal.md`: long prose and large data that interrupt the story get their own file. Prose goes in a text file unless code assembles it. Data goes in a data file when it is generated, read outside the language or edited outside code, and otherwise in a typed module. Files a tool generates keep its format.
+- `rules/universal.md`: input over a limit is rejected with an error naming the limit, never quietly shortened.
+- `rules/security.md`: an id that grants access by itself, such as a share link's, is a secret, so request logs record the route pattern rather than the path.
+- `checklists/review.md`: lint warnings on code the change added or grew are fixed, or the handoff says why they stay.
+- `docs/tooling.md`: the size rules skip comments, and they and `no-magic-numbers` are warnings; holding comments to the print width with `@stylistic/max-len`, since Prettier leaves comments unwrapped; test-file overrides for the function cap and magic numbers in ESLint, and `S101` and `PLR2004` in Ruff; Ruff's function-size and magic-value rules in a script of their own with `--exit-zero`, since Ruff has no warnings. The Agent hooks section shows warnings after an edit.
+
+### Changed
+
+- `rules/tooling.md`: a project script given no file paths covers its whole package, supplying a default path only then, through a shell wrapper or script file since package managers append arguments; `typecheck` takes no file paths, and `test` takes them only where the runner maps them to tests. The size and magic-value rules are lint warnings, and the after-edit hook shows them to the agent without failing.
+- `checklists/review.md`: the review runs before each pull request or other handoff, not once per batch, as a separate pass with fresh context.
+- `INSTALL.md`: in project mode, the rules folder defaults to `.coding-rules/`, and Install has the user confirm it or name another. The procedure writes it as `<rules folder>`, the managed block names it, and the manifest is found there.
+- `INSTALL.md`: in project mode, Install and Set up tooling add the rules folder to the ignore file of each formatter or linter that would rewrite the copy, recorded in the new manifest field `toolIgnores`, or asks the user to add it where the tool reads ignores only from its configuration. Uninstall removes those lines once the rules folder is gone. Verify, and so Check, looks for a formatter or linter that doesn't skip the folder; a no is recorded as `tool-ignores:<tool>` in `declined`.
+- `INSTALL.md`: Set up tooling proposes the plugins the rule table needs. In a repository with several packages, the after-edit hook stops looking for a package below the repository root when the root's scripts only fan out to the packages. The after-edit hook shows warnings without failing, and its check covers that. The finish hook finds changed files with `git status -z`, listing untracked files one by one, taking a rename's new path and skipping deletions. A git hook manager's configuration is written before its install command runs.
+- `INSTALL.md`: Check step 6 also checks that each hook script does what Set up tooling step 4 describes, and, whether or not the project has agent hooks, that the size and magic-value rules are warnings in its linter configuration; a no is recorded as `lint-levels:<project root>` in `declined`. Ignore files are tracked only by `toolIgnores`, never in `files`, so Uninstall removes only the line it added.
+
 ## 2.0.0 (2026-11-01)
 
 **Action: manual.** The installed `INSTALL.md` predates this release's Update steps. In Update step 6:

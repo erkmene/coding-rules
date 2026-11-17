@@ -26,6 +26,7 @@ The defaults an agent proposes for a project that lacks a kind of tool. A tool t
 
 - JS/TS: Prettier. Python: Ruff's formatter (or Black).
 - Run the formatter on save, in a pre-commit hook, and after every agent edit (see [Agent hooks](#agent-hooks)).
+- Prettier doesn't wrap comments. To hold them to the print width, enable `@stylistic/max-len` (core `max-len` is deprecated) after `eslint-config-prettier`, which turns both off, with `comments` set to the print width and `ignoreStrings`, `ignoreTemplateLiterals`, `ignoreRegExpLiterals` and `ignoreUrls` on. In `.svelte` files Prettier owns the markup and leaves long attributes and text alone, so there set `code` high and let it hold only the script's comments.
 
 ## JavaScript and TypeScript
 
@@ -51,16 +52,18 @@ Use ESLint with typescript-eslint's type-checked presets (`strictTypeChecked`, `
 | No unused code | `@typescript-eslint/no-unused-vars`, `noUnusedLocals`, `noUnusedParameters` |
 | No empty `catch` | `no-empty` |
 | One level of nested ternary | `no-nested-ternary` |
-| Function and file size, parameter count | `max-lines-per-function`, `max-lines`, `max-params` |
+| Function and file size, parameter count | `max-lines-per-function`, `max-lines` (both with `skipComments`, so documenting code doesn't count against it), `max-params`; the two size rules as warnings |
 | Low cognitive complexity | `sonarjs/cognitive-complexity` |
 | No commented-out code | `sonarjs/no-commented-code` |
-| Named constants for magic values | `@typescript-eslint/no-magic-numbers` |
+| Named constants for magic values | `@typescript-eslint/no-magic-numbers`, as a warning: it flags a number's first use, while the rule waits for repeats |
 | `for...of` over index loops | `unicorn/no-for-loop` |
 | Rules of React, Rules of Hooks | `eslint-plugin-react-hooks` (including its React Compiler rules) |
 | Accessible names, labels, semantic elements, no positive `tabIndex` | `eslint-plugin-jsx-a11y` (`alt-text`, `control-has-associated-label`, `label-has-associated-control`, `prefer-tag-over-role`, `tabindex-no-positive`) |
 | `rel="noopener"` on `target="_blank"` | `react/jsx-no-target-blank` |
 | Testing Library: `findBy*` over sleeps, no needless `act()` | `eslint-plugin-testing-library` (`prefer-find-by`, `no-unnecessary-act`, `prefer-screen-queries`) |
 | Strict compiler options | `tsconfig.json`: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, or extend `@tsconfig/strictest` |
+
+In test files, turn off `max-lines-per-function`, since a `describe` block is one function, and `@typescript-eslint/no-magic-numbers`, since expected values read best as literals.
 
 ## Python
 
@@ -89,6 +92,10 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
 | No unused imports, variables or arguments | `F401`, `F841`, `ARG` |
 | pytest style; specific `pytest.raises` | `PT` (e.g. `PT009`, `PT011`, `PT027`) |
 | Injection, `eval`, shell strings, insecure randomness | `S` (flake8-bandit), e.g. `S102`, `S307`, `S602`, `S311` |
+
+In test files, ignore `S101`, since pytest asserts with `assert`, and `PLR2004`, since expected values read best as literals (`[tool.ruff.lint.per-file-ignores]`).
+
+Ruff has no warning level. Keep function size and magic values (`PLR0915`, `PLR2004`) out of the selection that fails, and run them in a script of their own with `ruff check --select PLR0915,PLR2004 --exit-zero`.
 
 ## Architecture
 
@@ -121,7 +128,7 @@ Use Ruff for linting and a type checker (pyright, or mypy with `disallow_untyped
 
 Most coding agents can run commands around their own actions. Wire these in your agent tool. The commands are project-specific. [Set up tooling](../INSTALL.md#set-up-tooling) wires the first two.
 
-- **After each file edit:** run the formatter and auto-fixable lint rules on that file.
+- **After each file edit:** run the formatter and auto-fixable lint rules on that file, hand remaining errors back to the agent, and show it the remaining warnings without failing.
 - **When the agent finishes a task:** run lint, type checking and the affected tests, and hand any failures back to the agent.
 - **Before shell commands:** block force-pushes to shared branches, `git commit --no-verify`, and edits that weaken compiler or linter settings.
 

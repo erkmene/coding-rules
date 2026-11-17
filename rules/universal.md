@@ -59,6 +59,11 @@ A function's signature is a promise to the caller; design it from the caller's p
 - A literal (string or number) with meaning that appears more than twice gets a named constant.
 - Group related constants in a dedicated module or section so consumers reference one source of truth.
 
+## Long text and large data
+
+- Prose and data long enough to interrupt the story get their own file. Prose goes in a text file, such as Markdown, unless code assembles it from parts. Data goes in a data file, such as JSON, when it is generated, read outside this language or edited outside code; otherwise it goes in a typed module, which keeps type checks and comments.
+- Files a tool generates and owns keep the tool's format.
+
 ## Errors
 
 - Never swallow errors silently.
@@ -86,6 +91,7 @@ The story should be told not only in the code but in the logs, whether emitted t
 ## Boundaries
 
 - Validate at system boundaries: user input, external APIs, files, environment. Inside those boundaries, trust your own code and types instead of re-validating defensively at every layer.
+- Input over a limit is rejected with an error that names the limit, never quietly shortened.
 
 ## Dates and money
 

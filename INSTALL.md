@@ -9,12 +9,12 @@ Read this whole file before acting, then follow the section that matches the req
 ## Terms
 
 - **Source**: this repository, at one release tag (`vX.Y.Z`) or at a commit on a branch, usually `main`.
-- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is `coding-rules/` in the project root, holding a copy of `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md`.
+- **Rules folder**: the folder your tools read the rules from. In personal mode it is the user's clone of the source. In project mode it is a folder in the project root that the user confirms at install, `.coding-rules/` by default (installs before 2.1.0 used `coding-rules/`), holding a copy of `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md`. The managed block names it. This file writes it as `<rules folder>`.
 - **Wiring**: the files you create in a tool's own configuration so that each rule loads at the right time.
 - **Instructions file**: the plain-text instructions file your tool reads at the start of every session, such as `AGENTS.md` or your tool's own equivalent. In personal mode, use the user-level instructions file. In project mode, use the file in the project root. By default, a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it stops Claude Code from reading any `AGENTS.md` file, and one in a subdirectory stops that subdirectory's `AGENTS.md`. So never create a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` anywhere in a project that has an `AGENTS.md`; write the block into the instructions file the project already uses, or create a root `AGENTS.md`.
 - **Exclude file**: the repository's local ignore file, at the path `git rev-parse --git-path info/exclude` prints in the project root. It is usually `.git/info/exclude`, but not in a linked worktree or a submodule, where `.git` is a file.
 - **Settings file**: the file where a tool declares its hooks, such as `.claude/settings.json`. It holds the user's own settings too; only the hook entries you add are yours.
-- **Manifest**: `manifest.json` in the rules folder. It records what was installed.
+- **Manifest**: `manifest.json` in the rules folder, which the managed block names. It records what was installed.
 
 ## Hard rules
 
@@ -22,6 +22,7 @@ Read this whole file before acting, then follow the section that matches the req
 2. Name every wiring file `coding-rules-<rule>`, using the extension your tool expects, e.g. `coding-rules-git.md`. When your tool needs one folder per item, name the folder that way.
 3. Create, change or delete only:
    - the rules folder;
+   - in project mode, a line for the rules folder in a formatter's or linter's ignore file, and that ignore file if it does not exist yet, recorded in the manifest's `toolIgnores`;
    - `coding-rules-*` files and folders that the manifest lists or that you are creating now;
    - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
    - an instructions file or settings file that does not exist yet, and the parent directories that wiring or hook scripts need. Record them in the manifest;
@@ -73,7 +74,7 @@ How to wire each class:
 - **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and every rule that applies to the change: the **always** rules, rules whose globs match a changed file, and rules whose activity the change involves (opt-in rules only if installed). Report findings without editing. In every case, add a review line to the managed block (see below).
 
 Write references as paths your tool resolves:
-- project mode: paths relative to the project root, e.g. `coding-rules/rules/git.md`;
+- project mode: paths relative to the project root, e.g. `<rules folder>/rules/git.md`, which is `.coding-rules/rules/git.md` in the default folder;
 - personal mode: absolute paths into the clone.
 
 ## The managed block
@@ -114,7 +115,9 @@ If the instructions file does not exist, create it with only the block. If it al
   - `tool:<name>` for a tool they chose not to wire;
   - `fallback-lines` and `shadow:<path>` for the offers they turned down;
   - `cowork`, only when the user asks not to be asked about Cowork again;
-  - `hooks:<project root>` for agent hooks they turned down in that project.
+  - `hooks:<project root>` for agent hooks they turned down in that project;
+  - `tool-ignores:<tool>` for a formatter or linter they chose to let check the rules folder;
+  - `lint-levels:<project root>` for lint rules they chose to keep as errors in that project.
 
   For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`. When the user later says yes, or asks for the thing themselves, remove the key; for an opt-in rule, remove every key for it.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
@@ -131,8 +134,9 @@ If the instructions file does not exist, create it with only the block. If it al
   - `createdSettingsFile`: `true` if you created the settings file for this entry.
 
   Hook scripts go in `files` with their hashes.
+- `toolIgnores`: in project mode, one object per line you added to a formatter's or linter's ignore file (empty if none, and in personal mode), each with `file`, the ignore file; `line`, the line exactly as you wrote it; and `createdFile`, `true` if you created the file.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
-- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks. Include:
+- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks, and ignore files, which `toolIgnores` tracks even when you created them, since only your line in them is yours. Include:
   - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - hook scripts;
@@ -145,12 +149,14 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Tools.** Which agent tools to wire. List the ones you detected from configuration folders in the project and in the user's home directory, plus yourself.
    - **i18n.** Whether the project translates, or will translate, its user-facing text.
    - **Version.** The latest release tag (the default) or `main`. A user trying unreleased changes can name another branch. If the source has no release tags yet, say so and offer `main`.
-   - **Location** (personal mode only). Where the clone goes (default `~/coding-rules`), or where their existing clone is.
+   - **Location.** Personal mode: where the clone goes (default `~/coding-rules`), or where their existing clone is. Project mode: the rules folder in the project root, `.coding-rules/` by default; confirm it even when the user doesn't change it. The wiring uses explicit paths, so the rules load from any folder. A hidden folder keeps the project root tidy, but file listings and many search tools, including the ones agents search with, skip it by default, so suggest a visible one, such as `coding-rules/`, when people or agents should find the rules by browsing or searching rather than through the wiring.
    - **Cowork** (personal mode only, when Claude Code is among the tools). Whether they work in Cowork sessions on the desktop.
    - **Tooling** (only when you are working in a project). Whether to look at the project's linter, formatter, type checker and tests, propose what is missing, and wire agent hooks that run them after each edit. See [Set up tooling](#set-up-tooling).
 2. **Get the source.**
    - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
-   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/coding-rules/`. If `coding-rules/` already exists without a manifest, stop and ask the user.
+   - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/<rules folder>/`. If that folder already exists without a manifest, stop and ask the user.
+
+     Then keep the project's tools from rewriting the copy, since a rewritten file reads as a user edit at the next Update (hard rule 5). For each formatter or linter the project has that would check files in the rules folder, such as Prettier, dprint or markdownlint, also through a git hook: if the tool reads an ignore file of its own (`.prettierignore`; `.markdownlintignore` for markdownlint-cli, but not markdownlint-cli2, which reads only its configuration), add a line for the rules folder to it, creating the file if needed, and record it in `toolIgnores`. Tell the user why in the report. If the tool takes its ignores only from its configuration (ESLint 9, markdownlint-cli2), ask the user to add the rules folder there; it then belongs to the project. If they say no, record `tool-ignores:<tool>` in `declined`.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
 5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, and a no to i18n with the files matching its globs at the time, or none. In personal mode, when you are working in a project, record that no as `i18n:<project root>` as well.
@@ -158,7 +164,8 @@ If the instructions file does not exist, create it with only the block. If it al
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear. In Claude Code, run `claude -p "/context"` in the project directory, which starts a fresh session, and look for them among the memory files it lists;
-   - in project mode, `git check-ignore` reports none of the rules folder, the wiring files, the instructions file, the hook scripts or the settings files in `hooks` as ignored.
+   - in project mode, `git check-ignore` reports none of the rules folder, the wiring files, the instructions file, the hook scripts or the settings files in `hooks` as ignored;
+   - in project mode, every formatter or linter the project has leaves the rules folder alone, through a line in `toolIgnores` or the project's own configuration, unless `declined` has `tool-ignores:<tool>` for it. Each `toolIgnores` line is still in its file.
 7. **Set up tooling** if the user agreed, following [Set up tooling](#set-up-tooling).
 8. **Report:**
    - the mode and the version;
@@ -178,28 +185,29 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 2. **Propose**, in one message:
    - each missing kind of tool, with one recommendation from "Choosing tools" in `docs/tooling.md` and the reason it fits. For a formatter, include the size of the reformat it would cause, as `rules/tooling.md` says;
    - the agent hooks below, naming the settings file each one goes in;
+   - the plugins that the rule table in `docs/tooling.md` needs and the project lacks, separately from the tools, as `rules/tooling.md` says;
    - a git pre-commit hook, if the project has none.
 
    Skip the agent hooks when `declined` has `hooks:<project root>`, unless the user asked for this setup. Add only what the user accepts. If they turn down the agent hooks, record `hooks:<project root>`.
-3. **Add the tools** the user accepted: dev dependencies, configuration, and the project scripts `rules/tooling.md` asks for. Run each script once to see that it works.
+3. **Add the tools** the user accepted: dev dependencies, configuration, and the project scripts `rules/tooling.md` asks for. In project mode, keep each new formatter or linter off the rules folder as in Install step 2; when its ignores live in the configuration you are writing, put the rules folder there yourself, since the user accepted that configuration. Run each script once to see that it works.
 4. **Wire the agent hooks** for each tool in the manifest's `tools` that documents hooks (hard rule 4):
-   - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on.
-   - **When the agent finishes** (optional; ask): run the type checker and the affected tests, and hand failures back the same way. Make sure the hook cannot loop forever when a failure can't be fixed.
+   - **After each file edit:** run the project's format script, then its lint script with auto-fix, on the edited file only, and skip files those tools don't handle. When lint errors remain, hand them back to the agent as a failure, so it fixes them before going on. When only warnings remain, show them to the agent without failing, so the soft caps reach it.
+   - **When the agent finishes** (optional; ask): run the type checker and the affected tests, and hand failures back the same way. Find the changed files with `git status --porcelain -z --untracked-files=all`, which lists new files one by one; a diff against `HEAD`, such as pnpm's `...[HEAD]` filter, misses new files. With `-z`, paths are unquoted and a rename is followed by its old path as a separate entry: take the new path, and skip deleted files, which the tools can't run on. Make sure the hook cannot loop forever when a failure can't be fixed.
 
-   In a repository with several packages, the script sends each edited file to the scripts of the package it belongs to: the one with the nearest `package.json`, `pyproject.toml` or similar above the file.
+   In a repository with several packages, the script sends each edited file to the scripts of the package it belongs to: the nearest `package.json`, `pyproject.toml` or similar above the file that defines the script. Stop the search below the repository root when the root's scripts only run every package's scripts (such as `pnpm -r format`), since those can't take a file path. Then adding a package needs no change to the hook.
 
    Put each hook's logic in a script named by hard rule 2, such as `.claude/hooks/coding-rules-post-edit.sh`, and keep the entry in the settings file to a single call of that script. The settings file:
    - project mode: the tool's project settings file that is committed, so the hooks run for everyone;
    - personal mode: the tool's project settings file that is not committed (in Claude Code, `.claude/settings.local.json`). Add each script, and the settings file if Git doesn't already ignore it, to the exclude file. Never use user-level settings: the commands differ per project.
 
-   In Claude Code, the after-edit hook is a `PostToolUse` hook matching the file-editing tools, the finish hook is a `Stop` hook, the hook reads the edited file's path from the JSON on its standard input, and exit code 2 hands its standard error back to Claude. Check the hooks documentation for the current tool names and input fields.
+   In Claude Code, the after-edit hook is a `PostToolUse` hook matching the file-editing tools, the finish hook is a `Stop` hook, the hook reads the edited file's path from the JSON on its standard input, and exit code 2 hands its standard error back to Claude. To show warnings without failing, exit 0 and print JSON whose `hookSpecificOutput` has `hookEventName` set to `PostToolUse` and `additionalContext` holding them. Check the hooks documentation for the current tool names and input fields.
 
    For a tool without documented hooks, add a fallback line to the managed block, and record it in `hooks`:
    - project mode: "Unless your tool already runs it: after editing a file, run `<command>` on it and fix what it reports."
    - personal mode, where the block applies to every project: "Unless your tool already runs it: after editing a file in `<project root>`, run `<command>` on it and fix what it reports."
-5. **Add the git pre-commit hook** if the user accepted it, using the project's hook manager. Like the tools, it belongs to the project.
+5. **Add the git pre-commit hook** if the user accepted it, using the project's hook manager. Write the manager's configuration before running its install command: some managers, lefthook among them, write a sample configuration and install no git hook when there is none. Like the tools, it belongs to the project.
 6. **Verify** each hook script by running it with the input its tool would send:
-   - after-edit hook: on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error, then delete the file;
+   - after-edit hook: on a temporary file that breaks a format rule and a lint rule. Check that it fixes the formatting and hands back the lint error. If the lint configuration has warnings, run it again on a file with only a warning, and check that the agent sees the warning and the edit doesn't fail. Then delete the files;
    - finish hook: with a temporary type error and a failing test. Check that it hands both back, and that a second run with the failure still there stops instead of looping. Then remove them.
 
    If the tool loads hooks only when a session starts, tell the user that the hooks run from their next session.
@@ -210,7 +218,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 
 ## Update
 
-1. Read the manifest. If there is none, do an Install instead.
+1. Read the manifest, in the rules folder that the managed block names. If there is none, do an Install instead.
 2. Fetch the source, without changing any installed file yet:
    - Personal: run `git fetch --tags` in the clone. If the clone has local changes, stop and ask.
    - Project: clone the source into a temporary folder outside the project, with enough history to include the manifest's `commit` (a full clone is simplest).
@@ -255,7 +263,9 @@ Install makes decisions from the project and the user's setup as they are that d
 5. **Always wiring.**
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules, tell the user and offer to add them, unless `declined` has `fallback-lines` and its recorded evidence still holds. Record with a no what you found about symlink support, such as `core.symlinks` and whether this checkout's links are links. If this checkout's links have arrived as plain files, the **always** rules don't load here: say so and offer the fallback lines whatever `declined` says.
    - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, since nothing in the project shows it. If so, set `cowork` to `true` and add the fallback lines; if they ask not to be asked again, record `cowork`.
-6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; and the project scripts it calls still exist and still run the project's current tools. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
+6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; the project scripts it calls still exist and still run the project's current tools; and the script does what step 4 of [Set up tooling](#set-up-tooling) in this file describes. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
+
+   Separately, whether or not `hooks` has entries, check the project's linter configuration (in personal mode, only in the project you are working in, if any): the lint rules that `rules/tooling.md` makes warnings are warnings. Offer to change them, unless `declined` has `lint-levels:<project root>` and the configuration hasn't changed since. They belong to the project, so if the user says no, record `lint-levels:<project root>` with what you found.
 7. **Record** what changed in the manifest, including each offer the user turned down in `declined` (Cowork only as step 5 says), and **report** what you found and what you changed.
 
 Every install decision, and what can make it wrong later:
@@ -263,14 +273,16 @@ Every install decision, and what can make it wrong later:
 | Decision | Can become wrong when | Caught by |
 |---|---|---|
 | Version | a new release comes out | Update |
-| Mode, location | the user moves the clone, which breaks every reference | Check step 1 |
+| Mode, location | the user moves the clone or the rules folder, which breaks every reference | Check step 1 |
 | Instructions file | someone adds a `CLAUDE.md` next to an `AGENTS.md` | Check step 2 |
 | Tools | the user starts using another agent tool | Check step 3 |
 | i18n | the project starts translating | Check step 4 |
 | Links or fallback lines | someone checks the project out without symlink support | Check step 5 |
 | Cowork | the user starts working in Cowork | Check step 5 |
 | Ignore rules | someone ignores the rules folder, wiring, instructions file, hook scripts or settings file | Check step 1 |
+| Tool ignores | the project adds a formatter or linter that would rewrite the rules folder | Check step 1 |
 | Hooks | the project changes its tools or scripts, or someone edits the settings file | Check step 6 |
+| Lint levels | the project's lint configuration makes a soft cap an error | Check step 6 |
 
 ## Uninstall
 
@@ -278,5 +290,5 @@ Every install decision, and what can make it wrong later:
 2. Delete every file the manifest lists, except instructions files recorded with `null` (only their block is yours) and scripts kept in step 1 (hard rule 5 applies). Settings files are handled only in step 1. For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 3. Once every file is either deleted or kept, remove each entry's `exclude` lines from the exclude file, except those covering a script or settings file you kept, so kept files stay out of commits.
 4. Remove the managed block from each instructions file.
-5. Project mode: delete `coding-rules/manifest.json`, then delete the `coding-rules/` folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
+5. Project mode: delete `manifest.json` from the rules folder, then delete the rules folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Once you know whether the rules folder stays: if it is gone, remove each `toolIgnores` line from its file, and delete the file if you created it and nothing else is left in it; if it stays, keep the lines, so the tools still leave the kept files alone, and tell the user. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
 6. Report what was removed. In project mode, remind the user to commit the changes.

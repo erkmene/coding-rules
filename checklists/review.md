@@ -1,11 +1,12 @@
 # Review Checklist
 
-Go through this before handing work off, ideally as a separate review pass with fresh context. Report each item that fails.
+Go through this before handing work off: before each pull request, and before each time you ask the user to review or rely on the work, not once for several of these. Run it as a separate pass with fresh context, such as a reviewer subagent, since the pass that wrote the code tends to miss what it wrote. Report each item that fails.
 
 Work is finished when it would pass the review of a demanding colleague, not when it merely runs.
 
 - Re-read the full diff before handing it off, as a reviewer would. Every changed line is intentional; nothing unrelated rode along.
 - The formatter, linter, and type checker pass with no new suppressions.
+- Lint warnings on code the change added or grew are fixed, or the handoff says why they stay.
 - Tests pass — including the new tests this change needed. Changed behavior without a changed test is unfinished work.
 - If the changed area has no tests and no test setup, say so in the handoff instead. Adding a test framework is the owner's decision: propose it, don't add it.
 - Documentation, comments, and log messages touched by the change are updated with it.
