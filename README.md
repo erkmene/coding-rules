@@ -27,6 +27,7 @@ The agent asks you a few questions before it changes anything:
   - **Project:** a copy in `.coding-rules/` inside the project (or a folder you name), committed with it, so the rules work for everyone who clones the project, including cloud sessions. Each project is updated separately.
 - **Tools:** which agent tools to wire.
 - **i18n:** whether the project translates its user-facing text, which enables the i18n rules.
+- **Friction log:** whether agents note, when it happens, where a rule or an install step was wrong, unclear, in conflict with the project or not followed, in `feedback.md` in the rules folder. Check reports the entries and offers to draft a feedback note for the rules' owner, which you review and send yourself.
 - **Tooling:** whether to look at the project's linter, formatter, type checker and tests, propose what's missing, and wire agent hooks that format and lint each file the agent edits. The tools belong to the project; only the hooks are tracked by the install.
 - **Version:** the latest release or `main`.
 
@@ -46,7 +47,7 @@ The agent:
 
 > Check the coding rules. Follow the INSTALL.md in the coding-rules folder.
 
-The check looks for install decisions that later changes made wrong: a `CLAUDE.md` that hides `AGENTS.md`, an agent tool that isn't wired yet, a project that started translating, links that don't survive a checkout, hooks that call tools the project no longer uses.
+The check looks for install decisions that later changes made wrong: a `CLAUDE.md` that hides `AGENTS.md`, an agent tool that isn't wired yet, a project that started translating, links that don't survive a checkout, hooks that call tools the project no longer uses. It also asks about opt-ins added since the install, and reports the friction log's entries.
 
 > Set up the coding-rules tooling for this project.
 
@@ -65,6 +66,7 @@ To remove the rules, ask the agent to uninstall them; it removes exactly what th
 | `rules/api-design.md` | HTTP APIs: compatibility, versioning, errors, pagination, idempotency | for API work or API files |
 | `rules/data.md` | Schema compatibility, migrations, transactions, queries | for schema and query work or data files |
 | `rules/i18n.md` | Translated user-facing text | opt-in |
+| `rules/friction-log.md` | Noting friction with the rules in a log for their owner | opt-in |
 | `rules/javascript.md` | JavaScript (and TypeScript) | JS/TS files |
 | `rules/typescript.md` | TypeScript, on top of JavaScript | TS files |
 | `rules/python.md` | Python | Python files |

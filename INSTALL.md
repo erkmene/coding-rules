@@ -4,7 +4,7 @@ These instructions are for a coding agent. A person starts an install, update or
 
 > Install the coding rules from https://github.com/erkmene/coding-rules. Follow its INSTALL.md.
 
-Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Set up tooling](#set-up-tooling), [Update](#update), [Check](#check), or [Uninstall](#uninstall).
+Read this whole file before acting, then follow the section that matches the request: [Install](#install), [Set up tooling](#set-up-tooling), [Update](#update), [Check](#check), or [Uninstall](#uninstall). When the install has the friction log, or the user opts in to it during Install, note friction with this file's own steps in it, as `rules/friction-log.md` says.
 
 ## Terms
 
@@ -15,6 +15,7 @@ Read this whole file before acting, then follow the section that matches the req
 - **Exclude file**: the repository's local ignore file, at the path `git rev-parse --git-path info/exclude` prints in the project root. It is usually `.git/info/exclude`, but not in a linked worktree or a submodule, where `.git` is a file.
 - **Settings file**: the file where a tool declares its hooks, such as `.claude/settings.json`. It holds the user's own settings too; only the hook entries you add are yours.
 - **Manifest**: `manifest.json` in the rules folder, which the managed block names. It records what was installed.
+- **Friction log**: `feedback.md` in the rules folder, where agents note friction with the rules, when the user opted in to `rules/friction-log.md`. Agents add entries to it, you among them while following this file. Beyond that, create it, collect it and remove entries only as Install, Check and Uninstall say. The source doesn't ship it, it is not in `files`, and Update never overwrites or deletes it.
 
 ## Hard rules
 
@@ -27,6 +28,7 @@ Read this whole file before acting, then follow the section that matches the req
    - the text between `<!-- coding-rules:begin -->` and `<!-- coding-rules:end -->` in an instructions file;
    - an instructions file or settings file that does not exist yet, and the parent directories that wiring or hook scripts need. Record them in the manifest;
    - hook entries you add to a settings file, and lines you add to the exclude file, all recorded in the manifest's `hooks`;
+   - the friction log, and a feedback note at a path the user names in [Check](#check) step 7;
    - during [Set up tooling](#set-up-tooling), the project files the user agreed to add or change. They belong to the project from then on: don't list them in the manifest, and Uninstall leaves them.
    
    If anything else is in the way, stop and ask the user.
@@ -46,6 +48,7 @@ This table is the only place where rule scope is defined.
 | `rules/api-design.md` | activity + paths | designing or changing HTTP endpoints, error responses, pagination or an OpenAPI contract; files matching `**/{routes,controllers,handlers}/**`, `**/openapi*.{yaml,yml,json}`, `**/*.{controller,route,router}.{ts,js}` |
 | `rules/data.md` | activity + paths | designing a schema, writing a migration, writing queries; files matching `**/migrations/**`, `**/alembic/**`, `**/*.sql`, `**/schema.prisma`, `**/drizzle/**`, `**/{repositories,db}/**` |
 | `rules/i18n.md` | opt-in, activity + paths | only if the user opts in; then when writing or changing user-facing text or translations, and for files matching `**/{locales,i18n,messages}/**` |
+| `rules/friction-log.md` | opt-in, activity | only if the user opts in; then when a coding rule or an `INSTALL.md` step was wrong, unclear enough that you had to guess, in conflict with the project's conventions, or not followed on purpose |
 | `rules/javascript.md` | paths | `**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/typescript.md` | paths | `**/*.{ts,tsx,mts,cts}`, `**/*.svelte` |
 | `rules/python.md` | paths | `**/*.py` |
@@ -70,8 +73,8 @@ How to wire each class:
 - **paths**: use your tool's path-scoped rules with the globs above, referencing the rule file. If your tool cannot scope by path, add a fallback line: "When working on files matching `<globs>`, read `<path>`."
 - **activity**: use your tool's on-demand mechanism (for example a skill, or a rule the agent pulls in by its description). Use the "Load when" text as the description and reference the rule file. If there is none, add a fallback line: "When `<activity>`, read `<path>`."
 - **activity + paths**: wire the activity and the paths as two separate pieces of wiring: the on-demand mechanism without any path restriction, plus a path-scoped rule. Do not combine them into one item when your tool's path field restricts it to matching files only (in Claude Code, a skill with `paths` loads only for matching files and is no longer offered for the activity). Name the two pieces so they don't collide, e.g. `coding-rules-data` for the on-demand item and `coding-rules-data-paths` for the path-scoped rule.
-- **opt-in**: wire this rule only if the user said yes during install, then wire it by its other classes.
-- **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and every rule that applies to the change: the **always** rules, rules whose globs match a changed file, and rules whose activity the change involves (opt-in rules only if installed). Report findings without editing. In every case, add a review line to the managed block (see below).
+- **opt-in**: wire this rule only if the user said yes, at Install or in Check, then wire it by its other classes.
+- **review**: if your tool supports subagents, create one named `coding-rules-reviewer` with these instructions: read `<path to checklists/review.md>`, then review the current diff against the checklist and every rule that applies to the change: the **always** rules, rules whose globs match a changed file, and rules whose activity the change involves (opt-in rules only if installed). When `optIn` has `friction-log`, add: read `<path to rules/friction-log.md>`. Rewrite the subagent when that changes. Report findings without editing. In every case, add a review line to the managed block (see below).
 
 Write references as paths your tool resolves:
 - project mode: paths relative to the project root, e.g. `<rules folder>/rules/git.md`, which is `.coding-rules/rules/git.md` in the default folder;
@@ -109,9 +112,9 @@ If the instructions file does not exist, create it with only the block. If it al
 - `commit`: the full commit hash that was installed.
 - `installedAt`: the date of the last install or update, as `YYYY-MM-DD`.
 - `mode`: `personal` or `project`.
-- `optIn`: the opt-in rules that were installed, e.g. `["i18n"]`.
+- `optIn`: the opt-in rules that were installed, e.g. `["i18n", "friction-log"]`.
 - `declined`: what the user said no to, so Check doesn't ask again: an object with one key per question, and as its value what you knew when they said no. Keys:
-  - an opt-in rule (`i18n`), and in personal mode `i18n:<project root>` for a no given in one project;
+  - an opt-in rule (`i18n`, `friction-log`), and in personal mode `i18n:<project root>` for a no given in one project;
   - `tool:<name>` for a tool they chose not to wire;
   - `fallback-lines` and `shadow:<path>` for the offers they turned down;
   - `cowork`, only when the user asks not to be asked about Cowork again;
@@ -135,8 +138,9 @@ If the instructions file does not exist, create it with only the block. If it al
 
   Hook scripts go in `files` with their hashes.
 - `toolIgnores`: in project mode, one object per line you added to a formatter's or linter's ignore file (empty if none, and in personal mode), each with `file`, the ignore file; `line`, the line exactly as you wrote it; and `createdFile`, `true` if you created the file.
+- `feedbackLog`: the path of the friction log, or `null` when `optIn` doesn't have `friction-log`. It is not in `files`, since agents change it.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
-- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks, and ignore files, which `toolIgnores` tracks even when you created them, since only your line in them is yours. Include:
+- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks, ignore files, which `toolIgnores` tracks even when you created them, since only your line in them is yours, and the friction log, which `feedbackLog` tracks. Include:
   - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - hook scripts;
@@ -148,23 +152,24 @@ If the instructions file does not exist, create it with only the block. If it al
    - **Mode.** Personal: one clone serves all their projects on this machine, it is wired into their tools' user-level configuration, and updating it updates every project at once. Project: a copy is committed into this project, so it works for everyone who clones the project and in cloud or CI sessions, and each project is updated on its own. Recommend personal for someone working alone on one machine, and project for shared repositories or cloud sessions.
    - **Tools.** Which agent tools to wire. List the ones you detected from configuration folders in the project and in the user's home directory, plus yourself.
    - **i18n.** Whether the project translates, or will translate, its user-facing text.
+   - **Friction log.** Whether agents should note where a rule or a step in this file caused friction, when it happens, in `feedback.md` in the rules folder, so the user can later send the rules' owner feedback drawn from what agents actually saw. It costs about one line of context per session. In personal mode it serves every project and stays out of the clone's commits; in project mode it is committed with the rules folder, so everyone working in the project adds to it.
    - **Version.** The latest release tag (the default) or `main`. A user trying unreleased changes can name another branch. If the source has no release tags yet, say so and offer `main`.
    - **Location.** Personal mode: where the clone goes (default `~/coding-rules`), or where their existing clone is. Project mode: the rules folder in the project root, `.coding-rules/` by default; confirm it even when the user doesn't change it. The wiring uses explicit paths, so the rules load from any folder. A hidden folder keeps the project root tidy, but file listings and many search tools, including the ones agents search with, skip it by default, so suggest a visible one, such as `coding-rules/`, when people or agents should find the rules by browsing or searching rather than through the wiring.
    - **Cowork** (personal mode only, when Claude Code is among the tools). Whether they work in Cowork sessions on the desktop.
    - **Tooling** (only when you are working in a project). Whether to look at the project's linter, formatter, type checker and tests, propose what is missing, and wire agent hooks that run them after each edit. See [Set up tooling](#set-up-tooling).
 2. **Get the source.**
-   - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json`, which the repository ignores.
+   - Personal: clone the source into the chosen folder, or use the existing clone, and check out the chosen version. Add nothing to the clone except `manifest.json` and the friction log, which the repository ignores.
    - Project: fetch the chosen version into a temporary folder outside the project. Copy `rules/`, `checklists/`, `docs/`, `INSTALL.md` and `CHANGELOG.md` into `<project root>/<rules folder>/`. If that folder already exists without a manifest, stop and ask the user.
 
      Then keep the project's tools from rewriting the copy, since a rewritten file reads as a user edit at the next Update (hard rule 5). For each formatter or linter the project has that would check files in the rules folder, such as Prettier, dprint or markdownlint, also through a git hook: if the tool reads an ignore file of its own (`.prettierignore`; `.markdownlintignore` for markdownlint-cli, but not markdownlint-cli2, which reads only its configuration), add a line for the rules folder to it, creating the file if needed, and record it in `toolIgnores`. Tell the user why in the report. If the tool takes its ignores only from its configuration (ESLint 9, markdownlint-cli2), ask the user to add the rules folder there; it then belongs to the project. If they say no, record `tool-ignores:<tool>` in `declined`.
 3. **Wire every rule** in the table for each chosen tool: at user level in personal mode, at project level in project mode.
 4. **Write the managed block** into each instructions file.
-5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, and a no to i18n with the files matching its globs at the time, or none. In personal mode, when you are working in a project, record that no as `i18n:<project root>` as well.
+5. **Write the manifest.** Record in `declined` each detected tool the user didn't choose, and a no to i18n with the files matching its globs at the time, or none. In personal mode, when you are working in a project, record that no as `i18n:<project root>` as well. If the user opted in to the friction log, create it unless it exists, with only the heading `# coding-rules friction log`, and set `feedbackLog`; record a no as `friction-log` in `declined`, with the date as its value.
 6. **Verify:**
    - every wiring file contains only metadata and a reference (a symlink to the rule file counts as a reference);
    - every reference points to a file that exists;
    - where your tool can list the rules or instructions it has loaded, the **always** rules appear. In Claude Code, run `claude -p "/context"` in the project directory, which starts a fresh session, and look for them among the memory files it lists;
-   - in project mode, `git check-ignore` reports none of the rules folder, the wiring files, the instructions file, the hook scripts or the settings files in `hooks` as ignored;
+   - in project mode, `git check-ignore` reports none of the rules folder, the friction log, the wiring files, the instructions file, the hook scripts or the settings files in `hooks` as ignored;
    - in project mode, every formatter or linter the project has leaves the rules folder alone, through a line in `toolIgnores` or the project's own configuration, unless `declined` has `tool-ignores:<tool>` for it. Each `toolIgnores` line is still in its file.
 7. **Set up tooling** if the user agreed, following [Set up tooling](#set-up-tooling).
 8. **Report:**
@@ -228,7 +233,7 @@ Run this during Install when the user agreed, when a changelog Action asks for i
 4. Read the changelog entries the update brings in, and note each entry's **Action**. For a release target, read every entry newer than the installed version. When either version is a branch, read every line added to `CHANGELOG.md` between the installed commit and the target (`git diff <installed commit> <target commit> -- CHANGELOG.md`).
 5. Get the target version.
    - Personal: check out the target commit in the clone.
-   - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed.
+   - Project: check out the target in the temporary clone, then copy fresh files from it as in Install step 2. First compare the current files with the manifest hashes, and ask before overwriting any file the user changed. Leave the friction log as it is.
    
    Then read the target version's `INSTALL.md`, and follow its Update section from step 6 on, so the update uses the procedure it installs.
 6. Carry out every **manual** action. Ask when an action needs a decision.
@@ -257,16 +262,24 @@ Install makes decisions from the project and the user's setup as they are that d
 1. **Verify** as in Install step 6.
 2. **Shadowed instructions files.** For each `AGENTS.md` that holds the managed block, look for a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` in that folder or above it, and in the working directory or above it (see [Terms](#terms)). For a file outside the project root, such as one in a parent folder that holds several projects, only report it: never edit it, since it applies to every project below it. In personal mode, only report it too, since the block names the user's own clone and doesn't belong in a project file. When one stops Claude Code from reading the block and the user uses Claude Code, show the user and offer to add the managed block to that file as well, as for any instructions file that already exists. The rest of the file is theirs, so add the block only with their agreement, and record the file in `files` with `null`, so Uninstall removes only the block. If they decline, record `shadow:<path>`.
 3. **New tools.** Detect agent tools as in Install step 1. For each one that isn't in `tools`, and has no `tool:<name>` key in `declined` whose recorded evidence still holds, ask whether to wire it, and if so, wire it as in Install steps 3 to 5.
-4. **Declined opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it, and ask again only if they weren't there when the user said no. For i18n, the signs are files matching its globs.
+4. **Opt-ins.** For each opt-in rule in `declined`, look for signs the project needs it, and ask again only if they weren't there when the user said no. For i18n, the signs are files matching its globs.
    - Project mode: compare with the `declined` value, and update it with what you found.
    - Personal mode: look only in the project you are working in, if any. Ask when it has such files and they weren't in the value of `i18n:<project root>` (or that key is missing), and say that a yes wires the rule for every project. If the user says no, record `i18n:<project root>` with the files you found.
+
+   The friction log has no signs to look for, so a no to it stands. For each opt-in rule in the table that is in neither `optIn` nor `declined`, such as one a release added after the install, ask as Install step 1 does. Wire each one the user accepts as in Install steps 3 to 5.
 5. **Always wiring.**
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules, tell the user and offer to add them, unless `declined` has `fallback-lines` and its recorded evidence still holds. Record with a no what you found about symlink support, such as `core.symlinks` and whether this checkout's links are links. If this checkout's links have arrived as plain files, the **always** rules don't load here: say so and offer the fallback lines whatever `declined` says.
    - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, since nothing in the project shows it. If so, set `cowork` to `true` and add the fallback lines; if they ask not to be asked again, record `cowork`.
 6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; the project scripts it calls still exist and still run the project's current tools; and the script does what step 4 of [Set up tooling](#set-up-tooling) in this file describes. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
 
    Separately, whether or not `hooks` has entries, check the project's linter configuration (in personal mode, only in the project you are working in, if any): the lint rules that `rules/tooling.md` makes warnings are warnings. Offer to change them, unless `declined` has `lint-levels:<project root>` and the configuration hasn't changed since. They belong to the project, so if the user says no, record `lint-levels:<project root>` with what you found.
-7. **Record** what changed in the manifest, including each offer the user turned down in `declined` (Cowork only as step 5 says), and **report** what you found and what you changed.
+7. **Friction log.** If `feedbackLog` is set and the file is missing, say so and offer to create it again as in Install step 5. If the user says no, or asks at any time to stop logging, turn it off: remove its wiring, set `feedbackLog` to `null`, take `friction-log` out of `optIn` and record it in `declined`. Report how many entries the log has, by rule file or `INSTALL.md` section. If it has any, offer to draft a feedback note for the rules' owner:
+   - group the entries by rule file and section or `INSTALL.md` step, merge entries about the same friction, and give each what happened, what the agent did instead, the cause it named, and its evidence (commits, files);
+   - leave out secrets, credentials, personal data, and project details the friction doesn't need. In personal mode, ask before naming projects;
+   - show the draft, or write it to a file the user names outside the rules folder. The note is the user's to review and send: never send it, post it or open an issue yourself.
+
+   Remove entries only after the user says they have been handled, and only those.
+8. **Record** what changed in the manifest, including each offer the user turned down in `declined` (Cowork only as step 5 says), and **report** what you found and what you changed.
 
 Every install decision, and what can make it wrong later:
 
@@ -277,6 +290,7 @@ Every install decision, and what can make it wrong later:
 | Instructions file | someone adds a `CLAUDE.md` next to an `AGENTS.md` | Check step 2 |
 | Tools | the user starts using another agent tool | Check step 3 |
 | i18n | the project starts translating | Check step 4 |
+| Friction log | a release adds the opt-in after the install; entries wait to be collected; the log is deleted | Check steps 4 and 7 |
 | Links or fallback lines | someone checks the project out without symlink support | Check step 5 |
 | Cowork | the user starts working in Cowork | Check step 5 |
 | Ignore rules | someone ignores the rules folder, wiring, instructions file, hook scripts or settings file | Check step 1 |
@@ -287,8 +301,9 @@ Every install decision, and what can make it wrong later:
 ## Uninstall
 
 1. Remove each entry in `hooks` from its settings file (hard rule 5 applies); a `fallbackLine` goes with the managed block in step 4. If the user keeps an edited entry, keep the script it calls as well. Once every entry in a settings file is handled, delete the file if you created it and nothing else is left in it; otherwise keep it. Leave the project's tools, scripts and git hooks: they belong to the project. In personal mode, the entries can be in several projects.
-2. Delete every file the manifest lists, except instructions files recorded with `null` (only their block is yours) and scripts kept in step 1 (hard rule 5 applies). Settings files are handled only in step 1. For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
+2. Delete every file in `files`, except instructions files recorded with `null` (only their block is yours) and scripts kept in step 1 (hard rule 5 applies). Settings files are handled only in step 1. For a symlink, delete the link, never its target. Then delete each directory in `directories` that is now empty, in the order listed.
 3. Once every file is either deleted or kept, remove each entry's `exclude` lines from the exclude file, except those covering a script or settings file you kept, so kept files stay out of commits.
 4. Remove the managed block from each instructions file.
-5. Project mode: delete `manifest.json` from the rules folder, then delete the rules folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it. Once you know whether the rules folder stays: if it is gone, remove each `toolIgnores` line from its file, and delete the file if you created it and nothing else is left in it; if it stays, keep the lines, so the tools still leave the kept files alone, and tell the user. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
-6. Report what was removed. In project mode, remind the user to commit the changes.
+5. If `feedbackLog` is set: when the log has only its heading, delete it. When it has entries, show how many, offer the feedback note as in Check step 7, and ask whether to delete the log.
+6. Project mode: delete `manifest.json` from the rules folder, then delete the rules folder only if it is now empty. If anything is left in it (files the user added, or edited files they chose to keep), list it and ask before deleting it; a friction log the user chose to keep in step 5 stays without asking again. Once you know whether the rules folder stays: if it is gone, remove each `toolIgnores` line from its file, and delete the file if you created it and nothing else is left in it; if it stays, keep the lines, so the tools still leave the kept files alone, and tell the user. Personal mode: delete `manifest.json` from the clone, then ask whether to delete the clone itself.
+7. Report what was removed. In project mode, remind the user to commit the changes.
