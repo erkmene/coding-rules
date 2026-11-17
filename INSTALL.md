@@ -115,8 +115,9 @@ If the instructions file does not exist, create it with only the block. If it al
   - `tool:<name>` for a tool they chose not to wire;
   - `fallback-lines` and `shadow:<path>` for the offers they turned down;
   - `cowork`, only when the user asks not to be asked about Cowork again;
-  - `hooks:<project root>` for agent hooks they turned down in that project.
-  - `tool-ignores:<tool>` for a formatter or linter they chose to let check the rules folder.
+  - `hooks:<project root>` for agent hooks they turned down in that project;
+  - `tool-ignores:<tool>` for a formatter or linter they chose to let check the rules folder;
+  - `lint-levels:<project root>` for lint rules they chose to keep as errors in that project.
 
   For example `{"i18n": "no locale files", "tool:Cursor": ".cursor/ found"}`. When the user later says yes, or asks for the thing themselves, remove the key; for an opt-in rule, remove every key for it.
 - `tools`: the agent tools you wired, by the names the user would recognise, e.g. `["Claude Code", "Cursor"]`.
@@ -135,7 +136,7 @@ If the instructions file does not exist, create it with only the block. If it al
   Hook scripts go in `files` with their hashes.
 - `toolIgnores`: in project mode, one object per line you added to a formatter's or linter's ignore file (empty if none, and in personal mode), each with `file`, the ignore file; `line`, the line exactly as you wrote it; and `createdFile`, `true` if you created the file.
 - `directories`: every directory you created, deepest first, e.g. `[".claude/skills/coding-rules-git", ".claude/skills"]` in project mode. Do not list a directory that already existed.
-- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks. Include:
+- `files`: an object mapping the path of every file you created or manage to its SHA-256 hash, except settings files, which `hooks` tracks, and ignore files, which `toolIgnores` tracks even when you created them, since only your line in them is yours. Include:
   - wiring files. For a symlink, record its target exactly as `readlink` prints it, instead of a hash; unlike the keys, a relative target is relative to the link's folder;
   - instructions files you created (record `null` for an instructions file that already existed, since only its block is yours);
   - hook scripts;
@@ -262,7 +263,9 @@ Install makes decisions from the project and the user's setup as they are that d
 5. **Always wiring.**
    - Project mode, for each tool whose `alwaysWiring` is `link`: links arrive as plain files in checkouts without symlink support (Git on Windows with `core.symlinks=false`). If the managed block lacks fallback lines for the **always** rules, tell the user and offer to add them, unless `declined` has `fallback-lines` and its recorded evidence still holds. Record with a no what you found about symlink support, such as `core.symlinks` and whether this checkout's links are links. If this checkout's links have arrived as plain files, the **always** rules don't load here: say so and offer the fallback lines whatever `declined` says.
    - Personal mode, when `cowork` is `false`, Claude Code is in `tools` and `declined` has no `cowork`: ask whether the user works in Cowork now, since nothing in the project shows it. If so, set `cowork` to `true` and add the fallback lines; if they ask not to be asked again, record `cowork`.
-6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; the project scripts it calls still exist and still run the project's current tools; the script does what step 4 of [Set up tooling](#set-up-tooling) in this file describes; and the lint rules that `rules/tooling.md` makes warnings are warnings. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
+6. **Hooks.** For each entry in `hooks`: it is still in its settings file, or its `fallbackLine` still in its managed block, and still matches the manifest (hard rule 5); its script exists and matches its hash; the project scripts it calls still exist and still run the project's current tools; and the script does what step 4 of [Set up tooling](#set-up-tooling) in this file describes. Offer to fix what doesn't hold, following [Set up tooling](#set-up-tooling).
+
+   Separately, whether or not `hooks` has entries, check the project's linter configuration (in personal mode, only in the project you are working in, if any): the lint rules that `rules/tooling.md` makes warnings are warnings. Offer to change them, unless `declined` has `lint-levels:<project root>` and the configuration hasn't changed since. They belong to the project, so if the user says no, record `lint-levels:<project root>` with what you found.
 7. **Record** what changed in the manifest, including each offer the user turned down in `declined` (Cowork only as step 5 says), and **report** what you found and what you changed.
 
 Every install decision, and what can make it wrong later:
@@ -279,6 +282,7 @@ Every install decision, and what can make it wrong later:
 | Ignore rules | someone ignores the rules folder, wiring, instructions file, hook scripts or settings file | Check step 1 |
 | Tool ignores | the project adds a formatter or linter that would rewrite the rules folder | Check step 1 |
 | Hooks | the project changes its tools or scripts, or someone edits the settings file | Check step 6 |
+| Lint levels | the project's lint configuration makes a soft cap an error | Check step 6 |
 
 ## Uninstall
 
