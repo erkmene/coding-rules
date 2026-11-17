@@ -8,6 +8,21 @@ Each release is a git tag `vX.Y.Z`. Every entry starts with an **Action** that t
 
 Version numbers: the major version goes up when an Action is manual; the minor version for a re-wire action or any new or changed requirement; the patch version only for wording that doesn't change behavior.
 
+## 2.2.0 (2026-11-17)
+
+**Action: re-wire.** The scope table gained `rules/friction-log.md`, an opt-in rule, so existing installs wire nothing new unless the user opts in. Check, which every Update runs, asks whether to turn on the friction log, since the install never asked; Update step 8 adds the new `feedbackLog` field to the manifest, `null` until then.
+
+### Added
+
+- `rules/friction-log.md` (opt-in): when a rule or an `INSTALL.md` step was wrong, unclear enough to guess, in conflict with the project's conventions, or not followed on purpose, the agent notes it at once in `feedback.md` in the rules folder: one entry per event, with the date, the rule and section or step, what happened, what it did instead, the cause it believes in (the rules, the project or a tool) and what it checked. A rule simply applied is never logged. Entries are only appended, so a merge conflict between branches resolves by keeping both, and keep out secrets and personal data. A reviewer subagent marks rule-side findings instead of editing the log.
+- `INSTALL.md`: Install asks about the friction log alongside i18n, creates the log and records it in the new manifest field `feedbackLog`; a no is recorded as `friction-log` in `declined`. In personal mode the clone's `.gitignore` covers it; in project mode it is committed with the rules folder.
+- `INSTALL.md`: Check step 7 reports the log's entries by rule file and offers to draft a feedback note for the rules' owner, grouped by rule and merging repeats, with evidence and without secrets, personal data or unneeded project details. The user reviews and sends it; entries are removed only once the user says they have been handled. A no to recreating a missing log, or a request to stop, turns the friction log off.
+
+### Changed
+
+- `INSTALL.md`: Check step 4, now "Opt-ins", asks about each opt-in rule that is in neither `optIn` nor `declined`, such as one a release added after the install, and an opt-in rule can be wired after a yes in Check.
+- `INSTALL.md`: the `coding-rules-reviewer` subagent also reads `rules/friction-log.md` when `optIn` has it, and is rewritten when that changes. Hard rule 3 covers the log and the feedback note. Update leaves the log alone, Verify checks Git doesn't ignore it in project mode, and Uninstall asks before deleting a log that still has entries, offering the feedback note first.
+
 ## 2.1.0 (2026-11-16)
 
 **Action: none.** Expect Check, which every Update runs, to report findings on installs from 2.0.0; each is an offer, not a failure of the update. It compares each hook script with Set up tooling step 4 and the lint levels with `rules/tooling.md`, and offers to make the after-edit hook show lint warnings, since hooks from 2.0.0 pass on only errors, and to make the size and magic-value rules warnings. In project mode, Verify reports each formatter or linter that doesn't skip the rules folder, and Check offers to keep it off. Update step 8 adds the new `toolIgnores` field to the manifest. Existing project installs stay in `coding-rules/`; only new ones default to `.coding-rules/`.

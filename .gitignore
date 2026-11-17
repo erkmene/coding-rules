@@ -1,2 +1,3 @@
-# Written by the installing agent in a personal-mode clone (see INSTALL.md).
+# Written in a personal-mode clone: the manifest by the installing agent, the friction log by agents (see INSTALL.md).
 /manifest.json
+/feedback.md
